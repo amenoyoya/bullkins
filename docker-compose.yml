@@ -1,0 +1,80 @@
+# リバースプロキシ専用Docker
+version: "3"
+
+volumes:
+  # dbコンテナ永続化用ボリュームコンテナ
+  db-data:
+    driver: local
+
+services:
+  # Apache + PHP WEB server
+  web:
+    build: ./docker/web/
+    # restart: always
+    # network_mode: bridge
+    ports:
+      - 17400:80
+    links:
+      - db # dbコンテナとリンク
+      - mailhog # mailhogコンテナとリンク
+    volumes:
+      # ~www-data: host://./www/ => docker://web:/var/www/
+      ## DocumentRoot: host://./www/app/ => docker://web:/var/app/
+      - ./www/:/var/www/
+      # 設定ファイル
+      - ./docker/web/conf/000-default.conf:/etc/apache2/sites-available/000-default.conf
+      - ./docker/web/conf/php.ini:/etc/php.d/php.ini
+    environment:
+      # user ID: www-data のユーザIDを docker 実行ユーザIDに合わせたい場合に利用
+      ## ユーザIDを合わせないと ./www/ (docker://web:/var/www/) 内のファイル編集が出来なくなる
+      UID: ${UID}
+      # Composer設定
+      COMPOSER_ALLOW_SUPERUSER: 1 # root権限での実行を許可
+      COMPOSER_NO_INTERACTION: 1  # 非対話的にインストール
+      # TimeZone設定
+      TZ: Asia/Tokyo
+  
+  # local SMTP server + Mail catcher
+  mailhog:
+    image: mailhog/mailhog
+    # network_mode: bridge
+    ports:
+      - 17401:8025 # HTTP Port
+      # - 17425:1025 # SMTP Port
+  
+  # MySQL server
+  db:
+    build: ./docker/db/
+    # network_mode: bridge
+    volumes:
+      # データ永続化: docker-volume.db-data => docker.db:/var/lib/mysql
+      - db-data:/var/lib/mysql
+      # 初回投入データ: ./docker/db/initdb.d/
+      - ./docker/db/initdb.d/:/docker-entrypoint-initdb.d/
+      # MySQL設定ファイル: host:/./docker/db/my.cnf => /etc/mysql/conf.d/my.cnf
+      - ./docker/db/my.cnf:/etc/mysql/conf.d/my.cnf
+      # ダンプファイルやりとり用ディレクトリ（作業ディレクトリ）: host:/./docker/db/dump/ => docker.db:/var/dump/
+      - ./docker/db/dump/:/var/dump/
+    environment:
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: metakins
+      # TimeZone設定
+      TZ: Asia/Tokyo
+  
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    # restart: always
+    # network_mode: bridge
+    ports:
+      - 17402:80
+    links:
+      - db
+    volumes:
+      - /sessions
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: db
+      PMA_USER: root
+      PMA_PASSWORD: root
