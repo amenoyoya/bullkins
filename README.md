@@ -1,5 +1,7 @@
 # metakins
 
+CLI job generator, Admin panel management system.
+
 ## Environment
 
 - OS: Ubuntu 20.04
