@@ -18,5 +18,11 @@ fi
 sudo chown www-data:www-data /var/www/.msmtprc
 sudo chmod 600 /var/www/.msmtprc
 
+# プロジェクトディレクトリ作成
+if [ ! -d './app' ]; then
+    mkdir -p ./app/public/
+    echo '<?php phpinfo() ?>' > ./app/public/index.php
+fi
+
 # 環境変数を引き継いで Apache を起動させる
 sudo -E apachectl -D FOREGROUND

@@ -26,7 +26,8 @@ CLI job generator, Admin panel management system.
 |       |_ Dockerfile # ビルド設定
 |
 |_ www/ # www-data ホームディレクトリ => docker://web:/var/www/
-|   |_ app/ # DocumentRoot
+|   |_ app/ # プロジェクトディレクトリ
+|   |   |_ public/ # DocumentRoot
 |   |_ .msmtprc # msmtp (smtp 送信専用 MTA) 設定ファイル
 |   |_ startup.sh # webコンテナ起動時に実行されるスクリプト
 |
@@ -55,6 +56,6 @@ $ docker-compose up -d web mailhog
 ```
 
 - WEBサーバ: http://localhost:17400
-    - `./www/app/index.php` 表示
+    - `./www/app/public/index.php` 表示
 - mailhog Web UI: http://localhost:17401
     - メールを外部 SMTP サーバを通して実際に送信したい場合は `./www/.msmtprc` を編集

@@ -24,7 +24,7 @@ RUN apt-get update && apt-get install -y git libicu-dev mailutils unzip vim && \
 
 # 作業ディレクトリ
 ## docker://web:/var/www/ => host://./www/
-## DocumentRoot: docker://web:/var/www/app/
+## DocumentRoot: docker://web:/var/www/app/public/
 WORKDIR /var/www/
 
 # 作業者: www-data

@@ -19,7 +19,7 @@ services:
       - mailhog # mailhogコンテナとリンク
     volumes:
       # ~www-data: host://./www/ => docker://web:/var/www/
-      ## DocumentRoot: host://./www/app/ => docker://web:/var/app/
+      ## DocumentRoot: host://./www/app/public/ => docker://web:/var/app/public/
       - ./www/:/var/www/
       # 設定ファイル
       - ./docker/web/conf/000-default.conf:/etc/apache2/sites-available/000-default.conf

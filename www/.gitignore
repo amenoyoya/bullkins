@@ -1,2 +1,4 @@
 /.msmtp.log
 /.bash_history
+/.viminfo
+/.composer/

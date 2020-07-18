@@ -1,0 +1,22 @@
+<Files ~ "^\.ht">
+  deny from all
+</Files>
+
+RewriteEngine On
+
+# RewriteBaseをドキュメントルートパス => / に変更
+RewriteBase /
+
+# 末尾のスラッシュを補完
+RewriteCond %{REQUEST_URI} !/$
+RewriteCond %{REQUEST_URI} !\.[^/\.]+$
+RewriteRule .* %{REQUEST_URI}/ [R=301,L]
+
+# index.html|php なしに統一
+RewriteCond %{THE_REQUEST} ^.*/index\.(html|php)
+RewriteRule ^(.*)index\.(html|php)$ $1 [R=301,L]
+
+# .php なしでアクセス可能にする
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^ %{REQUEST_FILENAME}.php [QSA,L]
