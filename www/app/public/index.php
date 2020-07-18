@@ -4,8 +4,8 @@ middleware('auth'); // 管理者用ページ
 // => 認証されていなければ /login/ にリダイレクト
 ?>
 
-<?= component('header', ['title' => 'ログイン', 'bodyattr' => 'class="hold-transition login-page"'])?>
-    <div id="app" class="content">
-        管理者ページ
+<?= component('header', ['title' => '管理画面', 'bodyattr' => 'class="hold-transition sidebar-mini"'])?>
+    <div id="app" class="wrapper">
+        <?= component('navbar') ?>
     </div>
 <?= component('footer') ?>

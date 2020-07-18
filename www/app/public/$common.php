@@ -87,6 +87,14 @@ function loadAuthSession() {
 }
 
 /**
+ * 認証ユーザセッションをクリア（ログアウト）
+ */
+function clearAuthSession() {
+    unset($_SESSION['auth-session-token']);
+    unset($_SESSION['auth-user-info']);
+}
+
+/**
  * 認証実行
  * @param string $id
  * @param string $passwd
