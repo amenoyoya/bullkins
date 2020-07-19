@@ -31,5 +31,6 @@ WORKDIR /var/www/
 USER www-data
 
 # スタートアップコマンド（docker up の度に実行される）
+## 環境変数を引き継いで sudo 実行するため -E をつけている
 ## execute docker://web:/var/www/startup.sh
-CMD ["/bin/bash", "/var/www/startup.sh"]
+CMD ["sudo", "-E", "/bin/bash", "/var/www/startup.sh"]

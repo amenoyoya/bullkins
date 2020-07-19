@@ -1,4 +1,3 @@
-# リバースプロキシ専用Docker
 version: "3"
 
 volumes:
