@@ -1,3 +1,5 @@
+import path from 'path'
+
 /**
  * process.env form .env
  */
@@ -19,7 +21,7 @@ export default {
   ** See https://nuxtjs.org/api/configuration-target
   */
   target: 'server',
-  serverMiddleware: ['~/server/'],
+  serverMiddleware: [],
   /*
   ** Headers of the page
   ** See https://nuxtjs.org/api/configuration-head
@@ -60,7 +62,9 @@ export default {
   /*
   ** Nuxt.js dev-modules
   */
-  buildModules: [],
+  buildModules: [
+    'nuxt-purgecss',
+  ],
   /*
   ** Nuxt.js modules
   */
@@ -70,8 +74,32 @@ export default {
   ** See https://nuxtjs.org/api/configuration-build/
   */
   build: {
+    /**
+     * VeeValidate rules
+     */
     transpile: [
       'vee-validate/dist/rules',
     ],
+    /**
+     * PostCSS settings
+     */
+    postcss: {
+      plugins: {
+        'postcss-import': {}, // css で @import を有効化
+        tailwindcss: path.resolve(__dirname, './tailwind.config.js'),
+        'postcss-nested': {}, // css で scss のように nested style 定義を有効化
+      }
+    },
+    preset: {
+      stage: 1 // ref https://tailwindcss.com/docs/using-with-preprocessors#future-css-featuress
+    },
+    /**
+     * PurgeCSS settings
+     * 本番ビルド時に余分な CSS を削除
+     */
+    purgeCSS: {
+      mode: 'postcss',
+      enabled: process.env.NODE_ENV === 'production',
+    }
   }
 }
