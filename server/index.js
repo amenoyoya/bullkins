@@ -14,8 +14,8 @@ app.use(express.urlencoded({ extended: true })); // 配列型のフォームデ�
  * Node-RED 設定
  */
 const settings = {
-  httpAdminRoot: '/red', // Node-RED Editor UI URI
-  httpNodeRoot: '/', // HTTP Node Root URI
+  httpAdminRoot: '/server/red', // Node-RED Editor UI URI
+  httpNodeRoot: '/server', // HTTP Node Root URI
   userDir: `${__dirname}/.node-red/`, // user setting dir
   nodesDir: `${__dirname}/.node-red/nodes/`, // nodes dir
   functionGlobalContext: {
@@ -30,7 +30,12 @@ app.use(settings.httpNodeRoot, RED.httpNode)
 // Node-RED ランタイム起動
 RED.start()
 
-// サーバ実行
-const port = 3333
+// Server listen
+const port = process.env.SERVER_PORT || 3333
 console.log(`Backend server\nListening on: http://localhost:${port}`)
 server.listen(port)
+
+// module.exports = {
+//   path: '/server',
+//   handle: server,
+// }

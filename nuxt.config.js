@@ -22,6 +22,11 @@ export default {
   */
   target: 'server',
   serverMiddleware: [],
+  server: {
+    port: process.env.APP_PORT || 3000,
+    // host: '0.0.0.0',
+    // timing: false,
+  },
   /*
   ** Headers of the page
   ** See https://nuxtjs.org/api/configuration-head
@@ -46,13 +51,16 @@ export default {
     '@fortawesome/fontawesome-free-webfonts/css/fa-brands.css',
     '@fortawesome/fontawesome-free-webfonts/css/fa-regular.css',
     '@fortawesome/fontawesome-free-webfonts/css/fa-solid.css',
+    // tailwind.css imports
+    '~assets/css/tailwind.css',
   ],
   /*
   ** Plugins to load before mounting the App
   ** https://nuxtjs.org/guide/plugins
   */
   plugins: [
-    '~/plugins/vee-validate',
+    {src: '~/plugins/vee-validate.js'},
+    {src: '~/plugins/axios.js'},
   ],
   /*
   ** Auto import components
@@ -68,7 +76,9 @@ export default {
   /*
   ** Nuxt.js modules
   */
-  modules: [],
+  modules: [
+    '@nuxtjs/proxy',
+  ],
   /*
   ** Build configuration
   ** See https://nuxtjs.org/api/configuration-build/
@@ -101,5 +111,11 @@ export default {
       mode: 'postcss',
       enabled: process.env.NODE_ENV === 'production',
     }
-  }
+  },
+  /**
+   * @nuxtjs/proxy settings
+   */
+  proxy: {
+    '/server': {target: `http://localhost:${process.env.SERVER_PORT || 3333}`, ws: true},
+  },
 }
