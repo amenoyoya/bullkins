@@ -61,6 +61,7 @@ export default {
   plugins: [
     {src: '~/plugins/vee-validate.js'},
     {src: '~/plugins/axios.js'},
+    {src: '~/plugins/dialog.js', mode: 'client'},
   ],
   /*
   ** Auto import components
@@ -78,6 +79,7 @@ export default {
   */
   modules: [
     '@nuxtjs/proxy',
+    '@nuxtjs/toast',
   ],
   /*
   ** Build configuration

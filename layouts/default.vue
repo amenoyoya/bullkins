@@ -31,9 +31,6 @@ export default {
 </script>
 
 <style lang="postcss">
-.container {
-  @apply min-h-screen flex flex-col items-center text-center mx-auto mt-4;
-}
 ul.tabs {
   @apply flex justify-evenly w-full;
   li {

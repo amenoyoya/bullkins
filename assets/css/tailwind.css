@@ -1,3 +1,28 @@
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
+
+.container {
+  @apply min-h-screen flex flex-col mx-auto mt-4;
+}
+
+.btn {
+  @apply inline-block px-2 py-1 border-2 rounded shadow text-center;
+  &:hover {
+    @apply opacity-75;
+  }
+}
+
+.link {
+  @apply text-teal-500;
+  &:hover {
+    @apply opacity-75;
+  }
+}
+
+.input {
+  @apply px-2 py-1 border border-gray-300 text-gray-900 rounded;
+  &:focus {
+    @apply outline-none shadow-outline z-10;
+  }
+}

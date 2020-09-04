@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col">
+  <div class="flex flex-col justify-center items-center">
     <Logo />
     <h1 class="title">
       metakins
@@ -23,8 +23,8 @@
       </a>
     </div>
     <div class="mt-8">
-      <button class="btn" @click.prevent="$axios.post('/server/test/').then((res) => {
-        $console.log(res)
+      <button class="btn bg-blue-600 text-white" @click.prevent="$axios.post('/server/test/').then((res) => {
+        $toast.success(JSON.stringify(res.data), {duration: 3000})
       })">Execute</button>
     </div>
   </div>
@@ -37,9 +37,5 @@
 
 .links {
   @apply pt-8;
-}
-
-.btn {
-  @apply py-2 px-4 rounded-md border-2 bg-indigo-600 text-white;
 }
 </style>
