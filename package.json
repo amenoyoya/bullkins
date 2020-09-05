@@ -20,6 +20,7 @@
     "postcss-nested": "^4.2.3",
     "tailwindcss": "^1.7.6",
     "vee-validate": "^3.3.9",
+    "vue2-ace-editor": "^0.0.15",
     "vuejs-dialog": "^1.4.2"
   },
   "scripts": {

@@ -62,6 +62,7 @@ export default {
     {src: '~/plugins/vee-validate.js'},
     {src: '~/plugins/axios.js'},
     {src: '~/plugins/dialog.js', mode: 'client'},
+    {src: '~/plugins/ace.js', mode: 'client'},
   ],
   /*
   ** Auto import components
