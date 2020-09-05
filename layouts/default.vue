@@ -6,7 +6,7 @@
         :class="index == cur? 'active': 'inactive'"
         @click.prevent="cur = index"
       >
-        {{ tab.name }}
+        <i :class="`${tab.icon} mr-2`" />{{ tab.name }}
       </li>
     </ul>
     <div class="w-full py-4 border-l-2 border-r-2 border-b-2">
@@ -22,8 +22,8 @@ export default {
     return {
       cur: 0,
       tabs: [
-        {name: 'Frontend'},
-        {name: 'Database', src: '/nedb/'},
+        {icon: 'fas fa-tablet-alt', name: 'Frontend'},
+        {icon: 'fas fa-database', name: 'Database', src: '/nedb/'},
       ]
     }
   }
@@ -32,9 +32,9 @@ export default {
 
 <style lang="postcss">
 ul.tabs {
-  @apply flex justify-evenly w-full;
+  @apply flex justify-evenly items-center w-full;
   li {
-    @apply flex-1 p-1;
+    @apply flex-1 p-1 text-center;
     &.active {
       @apply border-t-2 border-l-2 border-r-2 text-teal-600 font-semibold;
     }
