@@ -3,7 +3,10 @@
     <h1 class="border-b-4 text-3xl font-bold">NeDB Express</h1>
     <section class="mt-4">
       <div class="bg-gray-300 flex flex-row justify-between p-2 items-center">
-        <h2 class="text-xl"><a href="/nedb/" class="link">Collections</a> > {{ collection }}</h2>
+        <ul class="breadcrumb">
+          <li><a href="/nedb/" class="link">Collections</a></li>
+          <li>{{ collection }}</li>
+        </ul>
       </div>
       <ul class="flex justify-center p-2 items-center">
         <li>
@@ -31,9 +34,9 @@
       <div class="flex justify-center items-center">
         {{ docs.start }} - {{ docs.end }} / {{ docs.count }}
       </div>
-      <button class="btn bg-green-600 text-white">
+      <a class="btn bg-green-600 text-white" :href="`/nedb/${collection}/edit/`">
         <i class="fas fa-sticky-note mr-2" />New
-      </button>
+      </a>
       <table class="min-w-full mt-4">
         <thead class="shadow-md">
           <tr v-if="columns.length">
@@ -46,9 +49,9 @@
         <tbody>
           <tr v-for="(row, x) in docs.data" :key="x">
             <td class="border p-2 flex justify-evenly">
-              <button class="btn bg-orange-400 text-white">
+              <a class="btn bg-orange-400 text-white" :href="`/nedb/${collection}/edit/?id=${row._id}`">
                 <i class="fas fa-edit mr-2" />Edit
-              </button>
+              </a>
               <button class="btn bg-red-600 text-white" @click.prevent="deleteDocument(row._id)">
                 <i class="fas fa-trash mr-2" />Delete
               </button>
@@ -139,3 +142,18 @@ export default {
   }
 }
 </script>
+
+<style lang="postcss">
+ul.breadcrumb {
+  @apply flex text-xl;
+  li {
+    &::after {
+      content: ">";
+      @apply mx-2;
+    }
+    &:last-child::after {
+      content: none;
+    }
+  }
+}
+</style>

@@ -1,8 +1,8 @@
 <template>
   <div class="container">
     <AceEditor
-      v-model="content" lang="json" theme="tomorrow_night_eighties" width="auto" height="500"
-      :options="{fontSize: 16}"
+      v-model="content" lang="json" theme="tomorrow" width="auto" height="80vh"
+      :options="{fontSize: '1rem'}"
     />
   </div>
 </template>

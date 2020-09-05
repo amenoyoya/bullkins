@@ -41,20 +41,18 @@ module.exports = (name, mode = 'open') => {
     filename: `./nedb/${name}.db`,
     autoload: true,
   })
-  // cursor 共通メソッド
-  const cursor = (method, condition) => {
-    const res = method(condition)
+  // cursor 共通メソッド: sort, limit, skip
+  const sort_limit_skip = (cursor, condition) => {
     if (typeof condition === 'object' && typeof condition['$sort'] === 'object') {
-      res = res.sort(condition['$sort'])
+      cursor = cursor.sort(condition['$sort'])
     }
     if (typeof condition === 'object' && typeof condition['$limit'] === 'number') {
-      res = res.limit(condition['$limit'])
+      cursor = cursor.limit(condition['$limit'])
     }
     if (typeof condition === 'object' && typeof condition['$skip'] === 'number') {
-      res = res.skip(condition['$skip'])
+      cursor = cursor.skip(condition['$skip'])
     }
-    console.log(res)
-    return res
+    return cursor
   }
   return {
     /**
@@ -63,7 +61,7 @@ module.exports = (name, mode = 'open') => {
      * @return {object[]} docs
      */
     async find(condition) {
-      return await cursor(db.find, condition).exec()
+      return await sort_limit_skip(db.find(condition), condition).exec()
     },
 
     /**
@@ -72,7 +70,7 @@ module.exports = (name, mode = 'open') => {
      * @return {number} count
      */
     async count(condition) {
-      return await cursor(db.count, condition).exec()
+      return await sort_limit_skip(db.count(condition), condition).exec()
     },
 
     /**
@@ -100,7 +98,7 @@ module.exports = (name, mode = 'open') => {
         page,
         count,
         data,
-        start,
+        start: count > 0? start + 1: 0,
         end: start + data.length,
         last,
         prev: page > 1? page - 1: false,
