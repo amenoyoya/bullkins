@@ -13,6 +13,13 @@
   }
 }
 
+.disabled {
+  @apply opacity-25;
+  &:hover {
+    @apply opacity-25 cursor-default;
+  }
+}
+
 .link {
   @apply text-teal-500;
   &:hover {

@@ -49,7 +49,7 @@ const main = async () => {
   // get nedb documents: GET /server/nedb/:collection/?page=X
   app.get('/server/nedb/:collection', async (req, res) => {
     res.json(
-      await nedb(req.params.collection).paginate({}, typeof req.query.page === 'number'? req.query.page: 1)
+      await nedb(req.params.collection).paginate({}, parseInt(req.query.page) || 1)
     ).send()
   })
 

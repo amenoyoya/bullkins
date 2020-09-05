@@ -1,4 +1,4 @@
-const nedb = require('nedb-promise')
+const nedb = require('nedb-promises')
 const fs = require('fs')
 
 /**
@@ -37,7 +37,7 @@ module.exports = (name, mode = 'open') => {
     }
   }
   // コレクション作成
-  const db = new nedb({
+  const db = nedb.create({
     filename: `./nedb/${name}.db`,
     autoload: true,
   })
@@ -79,7 +79,7 @@ module.exports = (name, mode = 'open') => {
      * @param {object} condition 
      * @param {number} page = 1
      * @param {number} perPage = 50
-     * @return {object{count, data, page, prev, next, last}}
+     * @return {object{count, data, start, end, page, prev, next, last}}
      */
     async paginate(condition, page = 1, perPage = 50) {
       page = page < 1? 1: page
@@ -89,7 +89,8 @@ module.exports = (name, mode = 'open') => {
       
       page = page > last? last: page
       
-      const find = db.find(condition).limit(perPage).skip((page - 1) * perPage)
+      const start = (page - 1) * perPage
+      const find = db.find(condition).limit(perPage).skip(start)
       if ('$sort' in condition && typeof condition['$sort'] === 'object') {
         find = find.sort(condition['$sort'])
       }
@@ -98,6 +99,8 @@ module.exports = (name, mode = 'open') => {
         page,
         count,
         data,
+        start: start + 1 > count? count: start + 1,
+        end: start + data.length > count? count: start + data.length,
         last,
         prev: page > 1? page - 1: false,
         next: page < last? page + 1: false,
