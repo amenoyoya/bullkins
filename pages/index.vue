@@ -1,5 +1,5 @@
 <template>
-  <div class="container justify-center items-center w-full h-full">
+  <div class="container justify-center items-center w-full h-full" v-if="!complete">
     <h1 class="text-2xl">仮会員登録テスト</h1>
     <ValidationObserver
       ref="vobs" tag="form" class="mt-8 md:w-3/4 sm:w-full px-4"
@@ -24,6 +24,18 @@
         </button>
       </div>
     </ValidationObserver>
+    <div class="mt-4 border border-orange-500 rounded flex flex-col justify-center items-center p-4 w-3/4" v-if="announce">
+      <p>すでに会員登録済みです</p>
+      <p>パスワードを忘れた場合は <a class="link" href="/reminder">こちら</a> から再設定してください</p>
+    </div>
+  </div>
+  <div class="container justify-center items-center w-full h-full" v-else>
+    <h1 class="text-2xl">仮会員登録テスト</h1>
+    <div class="mt-6">
+      <p>入力されたメールアドレス宛にメールを送信しました</p>
+      <p>メールに記載されたURLから本会員登録手続きを行ってください</p>
+      <p class="mt-4">※URLの有効期限は24時間です</p>
+    </div>
   </div>
 </template>
 
@@ -33,27 +45,40 @@ export default {
     return {
       email: '',
       password: '',
+      announce: false,
+      complete: false,
     }
   },
   methods: {
     async submit() {
       if (await this.$refs.vobs.validate()) {
+        this.announce = false
         try{
+          // すでに会員かどうか確認
+          if ((await this.$nedb.find('temp_users', {email: this.email})).length > 0) {
+            return this.$toast.info('仮会員登録されています\nメールをご確認ください', {duration: 3000})
+          }
+          if ((await this.$nedb.find('users', {email: this.email})).length > 0) {
+            this.announce = true
+            return false
+          }
+          // temp_users に登録
           const token = this.$util.uid(64)
           await this.$nedb.insert('temp_users', {
             email: this.email,
             password: await this.$util.bcryptHash(this.password),
             token: token,
-            created: new Date(),
-            updated: new Date(),
+            created: this.$dayjs(),
+            updated: this.$dayjs(),
           })
+          // メール送信
           await this.$util.sendmail({
             from: '"metakins" <admin@metakins.localhost>',
             to: this.email,
             subject: '仮会員登録が完了がしました',
             text: `以下のURLから本会員登録を完了してください\n※リンクは24時間有効\n\n${process.env.APP_URI}/register?token=${token}`
           })
-          this.$toast.success('仮会員登録が完了がしました', {duration: 3000})
+          this.complete = true
         } catch(err) {
           this.$toast.error(err.toString(), {duration: 3000})
         }

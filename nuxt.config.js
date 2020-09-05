@@ -59,8 +59,9 @@ export default {
   ** https://nuxtjs.org/guide/plugins
   */
   plugins: [
-    {src: '~/plugins/vee-validate.js'},
+    {src: '~/plugins/dayjs'},
     {src: '~/plugins/axios.js'},
+    {src: '~/plugins/vee-validate.js'},
     {src: '~/plugins/dialog.js', mode: 'client'},
     {src: '~/plugins/ace.js', mode: 'client'},
   ],
