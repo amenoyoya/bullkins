@@ -57,11 +57,14 @@ module.exports = (name, mode = 'open') => {
   return {
     /**
      * findメソッド
-     * @param {object} condition
+     * @param {[search_key]: object, $sort: object, $limit: number, $skip: number} condition
+     *    @see https://github.com/louischatriot/nedb#finding-documents
      * @return {object[]} docs
      */
     async find(condition) {
-      return await sort_limit_skip(db.find(condition), condition).exec()
+      // $sort, $limit, $skip キーを除く検索条件
+      const {$sort: {} = {}, $limit: {} = {}, $skip: {} = {}, ...query} = condition
+      return await sort_limit_skip(db.find(query), condition).exec()
     },
 
     /**
@@ -70,7 +73,9 @@ module.exports = (name, mode = 'open') => {
      * @return {number} count
      */
     async count(condition) {
-      return await sort_limit_skip(db.count(condition), condition).exec()
+      // $sort, $limit, $skip キーを除く検索条件
+      const {$sort: {} = {}, $limit: {} = {}, $skip: {} = {}, ...query} = condition
+      return await sort_limit_skip(db.count(query), condition).exec()
     },
 
     /**
@@ -78,19 +83,25 @@ module.exports = (name, mode = 'open') => {
      * @param {object} condition 
      * @param {number} page = 1
      * @param {number} perPage = 50
-     * @return {object{count, data, start, end, page, prev, next, last}}
+     * @return {count, data, start, end, page, prev, next, last}
      */
     async paginate(condition, page = 1, perPage = 50) {
       page = page < 1? 1: page
       
-      const count = await db.count(condition).exec()
+      // $sort, $limit, $skip, $page, $per キーを除く検索条件
+      const {
+        $sort: {} = {}, $limit: {} = {}, $skip: {} = {},
+        $page: {} = {}, $per: {} = {},
+        ...query
+      } = condition
+      const count = await db.count(query).exec()
       const last = Math.ceil(count / perPage)
       
       page = page > last? last: page
       
       const start = count > 0? (page - 1) * perPage: 0
-      const find = db.find(condition).limit(perPage).skip(start)
-      if ('$sort' in condition && typeof condition['$sort'] === 'object') {
+      const find = db.find(query).limit(perPage).skip(start)
+      if (typeof condition['$sort'] === 'object') {
         find = find.sort(condition['$sort'])
       }
       const data = await find.exec()

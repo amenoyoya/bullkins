@@ -40,22 +40,25 @@ export default {
   /**
    * 非同期通信: レンダリング前にデータ取得
    */
-  asyncData({$axios, params, query}) {
-    return query.id? $axios.get(`/server/nedb/${params.collectionData}/${query.id}`)
-      .then(res => {
-        return {
-          id: query.id,
-          document: typeof res.data.result === 'object'? JSON.stringify(res.data.result, null, 4): '',
+  async asyncData({app, params, query}) {
+    if (query.id) {
+      try {
+        const docs = await app.$nedb.find(params.collectionData, {_id: query.id})
+        if (docs.length > 0) {
+          return {
+            id: query.id,
+            document: JSON.stringify(docs[0], null, 4),
+          }
         }
-      })
-      .catch(err => {
+      } catch {
         return {
           id: undefined, document: '',
         }
-      })
-      : {
-        id: undefined, document: ''
       }
+    }
+    return {
+      id: undefined, document: ''
+    }
   },
   methods: {
     /**
@@ -66,14 +69,13 @@ export default {
         const data = JSON.parse(this.document)
         if (this.id !== undefined) {
           // 指定IDのドキュメントを更新
-          data['$query'] = {_id: this.id}
-        }
-        const res = (await this.$axios.put(`/server/nedb/${this.collection}/`, data)).data
-        if (res.result) {
+          await this.$nedb.update(this.collection, {_id: this.id}, data)
           this.$router.go(-1) // 前の画面に戻る
-        } else {
-          this.$toast.error(res.error, {duration: 3000})
+          return true
         }
+        // 新規ドキュメントinsert
+        await this.$nedb.insert(this.collection, data)
+        this.$router.go(-1) // 前の画面に戻る
       } catch(err) {
         this.$toast.error(err.toString(), {duration: 3000})
       }

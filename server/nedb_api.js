@@ -3,32 +3,44 @@ const router = express.Router()
 const globby = require('globby')
 const path = require('path')
 const nedb = require('./lib/nedb')
+const rison = require('rison')
 
 /**
- * get nedb collections
+ * get all nedb collections
  * @get /
- * @return {string[]} collections
+ * @return {result: string[]|boolean, error: string}
  */
 router.get('/', async (req, res) => {
-  const collections = []
-  for (const file of await globby('./nedb/*.db')) {
-    collections.push(path.basename(file, path.extname(file)))
+  try {
+    const collections = []
+    for (const file of await globby('./nedb/*.db')) {
+      collections.push(path.basename(file, path.extname(file)))
+    }
+    return res.json({result: collections}).send()
+  } catch(err) {
+    return res.json({result: false, error: err.toString()}).send()
   }
-  res.json(collections).send()
 })
 
 /**
  * create nedb collection
- * @post /:collection
- * @return {object {result: boolean, error: string}}
+ * @post /?collection={collection}
+ * @param {string} collection
+ * @return {result: boolean, error: string}
  */
-router.post('/:collection', async (req, res) => {
+router.post('/', async (req, res) => {
+  if (!req.query.collection) {
+    return res.json({
+      result: false,
+      error: 'query parameter "collection" required',
+    }).send()
+  }
   try {
-    res.json({
-      result: typeof nedb(req.params.collection) === 'object'
+    return res.json({
+      result: typeof nedb(req.query.collection) === 'object'
     }).send()
   } catch (err) {
-    res.json({
+    return res.json({
       result: false,
       error: err.toString(),
     }).send()
@@ -37,14 +49,21 @@ router.post('/:collection', async (req, res) => {
 
 /**
  * delete nedb collection
- * @delete /:collection
- * @return {object {result: number|boolean, error: string}}
+ * @delete /?collection={collection}
+ * @param {string} collection
+ * @return {result: number|boolean, error: string}
  */
-router.delete('/:collection', async (req, res) => {
+router.delete('/', async (req, res) => {
+  if (!req.query.collection) {
+    return res.json({
+      result: false,
+      error: 'query parameter "collection" required',
+    }).send()
+  }
   try {
-    res.json(nedb(req.params.collection, 'delete')).send()
+    return res.json(nedb(req.query.collection, 'delete')).send()
   } catch (err) {
-    res.json({
+    return res.json({
       result: false,
       error: err.toString(),
     }).send()
@@ -53,8 +72,11 @@ router.delete('/:collection', async (req, res) => {
 
 /**
  * get nedb documents
- * @get /:collection/?page=X
- * @return {object{
+ * @get /:collection/?query={rison_format_data}|pager={rison_format_data}
+ * @param {[search_key]: object, $sort: object, $limit: number, $skip: number} query: object[] を取得
+ *    @see https://github.com/louischatriot/nedb#finding-documents
+ * @param {[search_key]: object, $sort: object, $page: number, $per: number} pager: Pager を取得
+ * @return {error: string, result: object[] | Pager {
  *    page: number,
  *    prev: number,
  *    next: number,
@@ -66,74 +88,100 @@ router.delete('/:collection', async (req, res) => {
  * }}
  */
 router.get('/:collection', async (req, res) => {
-  res.json(
-    await nedb(req.params.collection).paginate({}, parseInt(req.query.page) || 1)
-  ).send()
-})
-
-/**
- * get nedb document
- * @get /:collection/:document_id
- * @return {result: object|boolean, error: string}
- */
-router.get('/:collection/:document_id', async (req, res) => {
+  if (req.query.query) {
+    // 通常検索
+    try {
+      const query = rison.decode(req.query.query)
+      return res.json({
+        result: await nedb(req.params.collection).find(query)
+      }).send()
+    } catch(err) {
+      return res.json({result: false, error: err.toString()}).send()
+    }
+  }
+  if (req.query.pager) {
+    // ページャ取得
+    try {
+      const query = rison.decode(req.query.pager)
+      return res.json({
+        result: await nedb(req.params.collection).paginate(query, query['$page'] || 1, query['$per'] || 50)
+      }).send()
+    } catch(err) {
+      return res.json({result: false, error: err.toString()}).send()
+    }
+  }
+  // 通常検索(limit: 50件)
   try {
-    const docs = await nedb(req.params.collection).find({_id: req.params.document_id})
-    res.json({
-      result: docs.length > 0? docs[0]: false,
+    return res.json({
+      result: await nedb(req.params.collection).find({$limit: 50})
     }).send()
-  } catch (err) {
-    res.json({
-      result: false,
-      error: err.toString(),
-    }).send()
+  } catch(err) {
+    return res.json({result: false, error: err.toString()}).send()
   }
 })
 
 /**
- * insert/update nedb document
- * @put /:collection/
- * @param {object|object[]} docs {$query: {条件式}} が指定されていれば update
+ * insert nedb documents
+ * @post /:collection/
+ * @param {object|object[]} payload
  * @return {result: object|number|boolean, error: string}
  */
-router.put('/:collection/', async (req, res) => {
+router.post('/:collection/', async (req, res) => {
   try {
-    if (typeof req.body['$query'] === 'object') {
-      // update
-      const query = req.body['$query']
-      delete req.body['$query']
-      res.json({
-        result: await nedb(req.params.collection).update(query, req.body)
-      }).send()
-    } else {
-      // insert
-      res.json({
-        result: await nedb(req.params.collection).insert(req.body)
-      }).send()
-    }
-  } catch (err) {
-    res.json({
-      result: false,
-      error: err.toString(),
+    return res.json({
+      result: await nedb(req.params.collection).insert(req.body)
     }).send()
+  } catch(err) {
+    return res.json({result: false, error: err.toString()}).send()
   }
 })
 
 /**
- * delete nedb document
- * @delete /:collection/:document_id
- * @return {object {result: number|boolean, error: string}}
+ * update nedb documents
+ * @put /:collection/?query={rison_format_data}
+ * @param {[search_key]: object} query 更新したいデータ条件
+ * @param {object} payload 指定keyのみ更新したい場合は {$set: {object}}
+ * @return {result: number|boolean, error: string}
  */
-router.delete('/:collection/:document_id', async (req, res) => {
+router.put('/:collection/', async (req, res) => {
+  let query = {}
+  if (req.query.query) {
+    try {
+      query = rison.decode(req.query.query)
+    } catch(err) {
+      return res.json({result: false, error: err.toString()}).send()
+    }
+  }
   try {
-    res.json({
-      result: await nedb(req.params.collection).remove({_id: req.params.document_id})
+    return res.json({
+      result: await nedb(req.params.collection).update(query, req.body)
     }).send()
-  } catch (err) {
-    res.json({
-      result: false,
-      error: err.toString(),
+  } catch(err) {
+    return res.json({result: false, error: err.toString()}).send()
+  }
+})
+
+/**
+ * delete nedb documents
+ * @delete /:collection/?query={rison_format_data}
+ * @param {[search_key]: object} query 削除したいデータ条件
+ * @return {result: number|boolean, error: string}
+ */
+router.delete('/:collection', async (req, res) => {
+  let query = {}
+  if (req.query.query) {
+    try {
+      query = rison.decode(req.query.query)
+    } catch(err) {
+      return res.json({result: false, error: err.toString()}).send()
+    }
+  }
+  try {
+    return res.json({
+      result: await nedb(req.params.collection).remove(query)
     }).send()
+  } catch(err) {
+    return res.json({result: false, error: err.toString()}).send()
   }
 })
 

@@ -69,15 +69,15 @@
 <script>
 /**
  * ページ初期化関数
- * @param {Axios} axios
+ * @param {NeDB} nedb
  * @param {string} collection
  * @param {string} page
  * @return {docs: Pager, pages: number[], columns: string[]}
  */
-const initialize = async (axios, collection, page) => {
+const initialize = async (nedb, collection, page) => {
   page = parseInt(page) || 1
-  // documents取得
-  const docs = (await axios.get(`/server/nedb/${collection}/?page=${page}`)).data
+  // documentsページャ取得
+  const docs = await nedb.paginate(collection, {$page: page, $per: 50})
   // columns取得
   const columns = []
   if (docs.data.length) {
@@ -108,8 +108,8 @@ export default {
   /**
    * 非同期通信: レンダリング前にデータ取得
    */
-  async asyncData({$axios, params, query}) {
-    return await initialize($axios, params.collection, query.page)
+  async asyncData({app, params, query}) {
+    return await initialize(app.$nedb, params.collection, query.page)
   },
   methods: {
     /**
@@ -123,19 +123,15 @@ export default {
         body: `${document_id} を削除しますか？`,
       }).then(async () => {
         try {
-          const res = (await vue.$axios.delete(`/server/nedb/${vue.collection}/${document_id}`)).data
-          if (res.result) {
-            // ページリロード
-            const data = await initialize(vue.$axios, vue.collection, vue.$route.query.page)
-            this.docs = data.docs
-            this.columns = data.columns
-            this.pages = data.pages
-            vue.$toast.success(`${vue.collection}/${document_id} を削除しました`, {duration: 3000})
-          } else {
-            vue.$toast.error(res.error, {duration: 3000})
-          }
-        } catch {
-          vue.$toast.error(`${vue.collection}/${document_id} を削除できません`, {duration: 3000})
+          await vue.$nedb.remove(vue.collection, {_id: document_id})
+          // ページリロード
+          const data = await initialize(vue.$nedb, vue.collection, vue.$route.query.page)
+          this.docs = data.docs
+          this.columns = data.columns
+          this.pages = data.pages
+          vue.$toast.success(`${vue.collection}/${document_id} を削除しました`, {duration: 3000})
+        } catch(err) {
+          vue.$toast.error(err.toString(), {duration: 3000})
         }
       })
     },

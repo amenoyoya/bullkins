@@ -19,7 +19,9 @@
         <i class="fas fa-lock mr-2" />パスワード
       </InputWithLabel>
       <div class="mt-6">
-        <button type="submit" class="btn">仮会員登録</button>
+        <button type="submit" :class="`btn ${invalid? 'disabled': ''}`" :disabled="invalid? true: null">
+          <i class="fas fa-paper-plane mr-2" />仮会員登録
+        </button>
       </div>
     </ValidationObserver>
   </div>
@@ -36,16 +38,16 @@ export default {
   methods: {
     async submit() {
       if (await this.$refs.vobs.validate()) {
-        const res = await this.$nedb.post('temp_users', {
-          email: this.email,
-          password: this.password,
-          created: new Date(),
-          updated: new Date(),
-        })
-        if (res.result) {
+        try{
+          await this.$nedb.insert('temp_users', {
+            email: this.email,
+            password: this.password,
+            created: new Date(),
+            updated: new Date(),
+          })
           this.$toast.success('仮会員登録が完了がしました', {duration: 3000})
-        } else {
-          this.$toast.error('仮会員登録に失敗しました', {duration: 3000})
+        } catch(err) {
+          this.$toast.error(err.toString(), {duration: 3000})
         }
       }
     }

@@ -43,12 +43,10 @@ export default {
   /**
    * 非同期通信: レンダリング前にデータ取得
    */
-  asyncData({$axios}) {
-    return $axios.get('/server/nedb').then(res => {
-      return {
-        collections: res.data
-      }
-    })
+  async asyncData(context) {
+    return {
+      collections: await context.app.$nedb.enumerate()
+    }
   },
   methods: {
     /**
@@ -62,16 +60,12 @@ export default {
         return this.$toast.info('すでに存在するコレクションです', {duration: 3000})
       }
       try {
-        const res = (await this.$axios.post(`/server/nedb/${this.collection}`)).data
-        if (res.result) {
-          this.$toast.success(`${this.collection} を作成しました`, {duration: 3000})
-          this.collections.unshift(this.collection)
-          this.collection = ''
-        } else {
-          this.$toast.error(res.error, {duration: 3000})
-        }
-      } catch {
-        this.$toast.error(`${this.collection} を作成できません`, {duration: 3000})
+        await this.$nedb.create(this.collection)
+        this.$toast.success(`${this.collection} を作成しました`, {duration: 3000})
+        this.collections.unshift(this.collection)
+        this.collection = ''
+      } catch(err) {
+        this.$toast.error(err.toString(), {duration: 3000})
       }
     },
 
@@ -86,15 +80,11 @@ export default {
         body: `${collection} を削除しますか？`,
       }).then(async () => {
         try {
-          const res = (await vue.$axios.delete(`/server/nedb/${collection}`)).data
-          if (res.result) {
-            vue.$toast.success(`${collection} を削除しました`, {duration: 3000})
-            vue.collections = vue.collections.filter(c => c !== collection)
-          } else {
-            vue.$toast.error(res.error, {duration: 3000})
-          }
-        } catch {
-          vue.$toast.error(`${collection} を削除できません`, {duration: 3000})
+          await vue.$nedb.delete(collection)
+          vue.$toast.success(`${collection} を削除しました`, {duration: 3000})
+          vue.collections = vue.collections.filter(c => c !== collection)
+        } catch(err) {
+          vue.$toast.error(err.toString(), {duration: 3000})
         }
       })
     }
