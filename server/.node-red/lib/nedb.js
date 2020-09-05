@@ -44,15 +44,16 @@ module.exports = (name, mode = 'open') => {
   // cursor 共通メソッド
   const cursor = (method, condition) => {
     const res = method(condition)
-    if ('$sort' in condition && typeof condition['$sort'] === 'object') {
+    if (typeof condition === 'object' && typeof condition['$sort'] === 'object') {
       res = res.sort(condition['$sort'])
     }
-    if ('$limit' in condition && typeof condition['$limit'] === 'number') {
+    if (typeof condition === 'object' && typeof condition['$limit'] === 'number') {
       res = res.limit(condition['$limit'])
     }
-    if ('$skip' in condition && typeof condition['$skip'] === 'number') {
+    if (typeof condition === 'object' && typeof condition['$skip'] === 'number') {
       res = res.skip(condition['$skip'])
     }
+    console.log(res)
     return res
   }
   return {
@@ -89,7 +90,7 @@ module.exports = (name, mode = 'open') => {
       
       page = page > last? last: page
       
-      const start = (page - 1) * perPage
+      const start = count > 0? (page - 1) * perPage: 0
       const find = db.find(condition).limit(perPage).skip(start)
       if ('$sort' in condition && typeof condition['$sort'] === 'object') {
         find = find.sort(condition['$sort'])
@@ -99,8 +100,8 @@ module.exports = (name, mode = 'open') => {
         page,
         count,
         data,
-        start: start + 1 > count? count: start + 1,
-        end: start + data.length > count? count: start + data.length,
+        start,
+        end: start + data.length,
         last,
         prev: page > 1? page - 1: false,
         next: page < last? page + 1: false,
@@ -119,14 +120,11 @@ module.exports = (name, mode = 'open') => {
     /**
      * updateメソッド
      * @param {object} condition 
-     * @param {object} updateDoc 
+     * @param {object} updateDoc 指定カラムのみ更新したい場合は {$set: {column: value}}
      * @return {number} updated
      */
     async update(condition, updateDoc) {
-      const dbupdate = query => {
-        return db.update(query, updateDoc, {multi: true})
-      }
-      return await cursor(dbupdate, condition).exec()
+      return await db.update(condition, updateDoc, {multi: true})
     },
 
     /**
@@ -135,10 +133,7 @@ module.exports = (name, mode = 'open') => {
      * @return {number} removed
      */
     async remove(condition) {
-      const dbremove = query => {
-        return db.remove(query, {multi: true})
-      }
-      return await cursor(dbremove, condition).exec()
+      return await db.remove(condition, {multi: true})
     },
   }
 }

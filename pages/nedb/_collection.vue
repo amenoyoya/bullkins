@@ -31,24 +31,30 @@
       <div class="flex justify-center items-center">
         {{ docs.start }} - {{ docs.end }} / {{ docs.count }}
       </div>
+      <button class="btn bg-green-600 text-white">
+        <i class="fas fa-sticky-note mr-2" />New
+      </button>
       <table class="min-w-full mt-4">
         <thead class="shadow-md">
-          <tr v-if="docs.data">
-            <th class="border">_id</th>
-            <th class="border"
-              v-for="(col, index) in Object.keys(docs.data[0]).filter(c => c != '_id')" :key="index"
-            >
-              {{ col }}
+          <tr v-if="columns.length">
+            <th class="border">Edit</th>
+            <th class="border" v-for="(column, index) in columns" :key="index">
+              {{ column }}
             </th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(row, x) in docs.data" :key="x">
-            <td class="border p-2">{{ row['_id'] }}</td>
-            <td class="border p-2"
-              v-for="(key, y) in Object.keys(row).filter(k => k != '_id')" :key="y"
-            >
-              {{ row[key] }}
+            <td class="border p-2 flex justify-evenly">
+              <button class="btn bg-orange-400 text-white">
+                <i class="fas fa-edit mr-2" />Edit
+              </button>
+              <button class="btn bg-red-600 text-white" @click.prevent="deleteDocument(row._id)">
+                <i class="fas fa-trash mr-2" />Delete
+              </button>
+            </td>
+            <td class="border p-2" v-for="(column, y) in columns" :key="y">
+              {{ row[column] }}
             </td>
           </tr>
         </tbody>
@@ -65,16 +71,61 @@ export default {
       collection: this.$route.params.collection,
       pages: [],
       docs: [],
+      columns: [],
     }
   },
   async mounted() {
-    const page = parseInt(this.$route.query.page) || 1
-    console.log(page)
-    this.docs = (await this.$axios.get(`/server/nedb/${this.collection}/?page=${page}`)).data
-    this.pages = [...Array(this.docs.last).keys()].slice(
-      (this.docs.page - 1) - 2 < 0? 0: (this.docs.page - 1) - 2,
-      this.docs.page + 2 > this.docs.last? this.docs.last: this.docs.page + 2
-    )
+    await this.initialize()
+  },
+  methods: {
+    /**
+     * ページ初期化: mounted時に呼び出す
+     */
+    async initialize() {
+      const page = parseInt(this.$route.query.page) || 1
+      // documents取得
+      this.docs = (await this.$axios.get(`/server/nedb/${this.collection}/?page=${page}`)).data
+      // columns取得
+      if (this.docs.data.length) {
+        this.columns = ['_id']
+        for (const key of Object.keys(this.docs.data[0])) {
+          if (!this.columns.includes(key)) {
+            this.columns.push(key)
+          }
+        }
+      } else {
+        this.columns = []
+      }
+      // ページネーションリスト生成
+      this.pages = [...Array(this.docs.last).keys()].slice(
+        (this.docs.page - 1) - 2 < 0? 0: (this.docs.page - 1) - 2,
+        this.docs.page + 2 > this.docs.last? this.docs.last: this.docs.page + 2
+      )
+    },
+
+    /**
+     * ドキュメント削除
+     * @param {string} document_id
+     */
+    async deleteDocument(document_id) {
+      const vue = this
+      vue.$dialog.confirm({
+        title: '確認',
+        body: `${document_id} を削除しますか？`,
+      }).then(async () => {
+        try {
+          const res = (await vue.$axios.delete(`/server/nedb/${vue.collection}/${document_id}`)).data
+          if (res.result) {
+            await vue.initialize() // ページリロード
+            vue.$toast.success(`${vue.collection}/${document_id} を削除しました`, {duration: 3000})
+          } else {
+            vue.$toast.error(res.error, {duration: 3000})
+          }
+        } catch {
+          vue.$toast.error(`${vue.collection}/${document_id} を削除できません`, {duration: 3000})
+        }
+      })
+    },
   }
 }
 </script>

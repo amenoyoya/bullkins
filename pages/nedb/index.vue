@@ -45,27 +45,34 @@ export default {
     this.collections = (await this.$axios.get('/server/nedb')).data
   },
   methods: {
+    /**
+     * コレクション作成
+     */
     async createCollection() {
       if (this.collection === '') {
-        return this.$toast.info('作成するデータベース名を指定してください', {duration: 3000})
+        return this.$toast.info('作成するコレクション名を指定してください', {duration: 3000})
       }
       if (this.collections.includes(this.collection)) {
-        return this.$toast.info('すでに存在するデータベースです', {duration: 3000})
+        return this.$toast.info('すでに存在するコレクションです', {duration: 3000})
       }
       try {
-        const res = await this.$axios.post(`/server/nedb/${this.collection}`)
-        if (res.data.result) {
+        const res = (await this.$axios.post(`/server/nedb/${this.collection}`)).data
+        if (res.result) {
           this.$toast.success(`${this.collection} を作成しました`, {duration: 3000})
           this.collections.unshift(this.collection)
           this.collection = ''
         } else {
-          this.$toast.error(`${this.collection} を作成できません`, {duration: 3000})
+          this.$toast.error(res.error, {duration: 3000})
         }
       } catch {
         this.$toast.error(`${this.collection} を作成できません`, {duration: 3000})
       }
     },
 
+    /**
+     * コレクション削除
+     * @param {string} collection
+     */
     deleteCollection(collection) {
       const vue = this
       vue.$dialog.confirm({
@@ -73,14 +80,14 @@ export default {
         body: `${collection} を削除しますか？`,
       }).then(async () => {
         try {
-          const res = await vue.$axios.delete(`/server/nedb/${collection}`)
-          if (res.data.result) {
+          const res = (await vue.$axios.delete(`/server/nedb/${collection}`)).data
+          if (res.result) {
             vue.$toast.success(`${collection} を削除しました`, {duration: 3000})
             vue.collections = vue.collections.filter(c => c !== collection)
           } else {
-            vue.$toast.error(`${collection} を削除できません`, {duration: 3000})
+            vue.$toast.error(res.error, {duration: 3000})
           }
-        } catch(err) {
+        } catch {
           vue.$toast.error(`${collection} を削除できません`, {duration: 3000})
         }
       })

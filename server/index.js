@@ -79,6 +79,20 @@ const main = async () => {
     }
   })
 
+  // delete nedb document: DELETE /server/nedb/:collection/:document_id
+  app.delete('/server/nedb/:collection/:document_id', async (req, res) => {
+    try {
+      res.json({
+        result: await nedb(req.params.collection).remove({_id: req.params.document_id})
+      }).send()
+    } catch (err) {
+      res.json({
+        result: false,
+        error: err.toString(),
+      }).send()
+    }
+  })
+
   /**
    * Server listen
    */

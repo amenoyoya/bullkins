@@ -24,6 +24,7 @@ export default {
       tabs: [
         {name: 'Frontend'},
         {name: 'Backend', src: '/server/red/'},
+        {name: 'Database', src: '/nedb/'},
       ]
     }
   }
