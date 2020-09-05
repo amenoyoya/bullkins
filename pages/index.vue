@@ -41,7 +41,8 @@ export default {
         try{
           await this.$nedb.insert('temp_users', {
             email: this.email,
-            password: this.password,
+            password: await this.$util.bcryptHash(this.password),
+            token: this.$util.uid(64),
             created: new Date(),
             updated: new Date(),
           })

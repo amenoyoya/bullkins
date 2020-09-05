@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import axios from 'axios'
 import rison from 'rison'
+import randtoken from 'rand-token'
 
 Vue.prototype.$axios = axios
 Vue.prototype.$console = console
@@ -135,8 +136,47 @@ const nedb = axios => {
 Vue.prototype.$nedb = nedb(axios)
 
 /**
+ * ユーティリティAPI関連
+ */
+const util = axios => {
+  return {
+    /**
+     * bcryptハッシュ化
+     * @param {string} plain
+     * @param {string|number} salt = 10
+     * @return {string} hash
+     */
+    async bcryptHash(plain, salt = 10) {
+      return (await axios.patch('/server/util/bcrypt/', {plain, salt})).data
+    },
+
+    /**
+     * bcryptハッシュ比較
+     * @param {string} plain
+     * @param {string} hash
+     * @return {boolean} verified
+     */
+    async bcryptVerify(plain, hash) {
+      return (await axios.post('/server/util/bcrypt/', {plain, hash})).data
+    },
+
+    /**
+     * generate random token
+     * @param {number} token_length
+     * @return {string} token
+     */
+    uid(token_length) {
+      return randtoken.uid(token_length)
+    },
+  }
+}
+
+Vue.prototype.$util = util(axios)
+
+/**
  * asyncData で使えるように context.app へ export
  */
 export default ({app, $axios}) => {
   app.$nedb = nedb($axios)
+  app.$util = util($axios)
 }

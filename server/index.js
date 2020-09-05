@@ -7,9 +7,14 @@ app.use(express.json()); // クライアントデータを JSON 形式で取得�
 app.use(express.urlencoded({ extended: true })); // 配列型のフォームデータを取得可能にする
 
 /**
- * NeDB REST API: /server/nedb/:collection/*
+ * NeDB REST API: /server/nedb/*
  */
-app.use('/nedb', require('./nedb_api'))
+app.use('/nedb', require('./api_nedb'))
+
+/**
+ * Utility REST API: /server/util/*
+ */
+app.use('/util', require('./api_util'))
 
 module.exports = {
   path: '/server',
