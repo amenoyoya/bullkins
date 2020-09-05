@@ -64,45 +64,51 @@
 </template>
 
 <script>
+/**
+ * ページ初期化関数
+ * @param {Axios} axios
+ * @param {string} collection
+ * @param {string} page
+ * @return {docs: Pager, pages: number[], columns: string[]}
+ */
+const initialize = async (axios, collection, page) => {
+  page = parseInt(page) || 1
+  // documents取得
+  const docs = (await axios.get(`/server/nedb/${collection}/?page=${page}`)).data
+  // columns取得
+  const columns = []
+  if (docs.data.length) {
+    columns.push('_id')
+    for (const key of Object.keys(docs.data[0])) {
+      if (!columns.includes(key)) {
+        columns.push(key)
+      }
+    }
+  }
+  // ページネーションリスト生成
+  const pages = [...Array(docs.last).keys()].slice(
+    (docs.page - 1) - 2 < 0? 0: (docs.page - 1) - 2,
+    docs.page + 2 > docs.last? docs.last: docs.page + 2
+  )
+  return {
+    docs, columns, pages
+  }
+}
+
 export default {
   layout: 'plain',
   data() {
     return {
       collection: this.$route.params.collection,
-      pages: [],
-      docs: [],
-      columns: [],
     }
   },
-  async mounted() {
-    await this.initialize()
+  /**
+   * 非同期通信: レンダリング前にデータ取得
+   */
+  async asyncData({$axios, params, query}) {
+    return await initialize($axios, params.collection, query.page)
   },
   methods: {
-    /**
-     * ページ初期化: mounted時に呼び出す
-     */
-    async initialize() {
-      const page = parseInt(this.$route.query.page) || 1
-      // documents取得
-      this.docs = (await this.$axios.get(`/server/nedb/${this.collection}/?page=${page}`)).data
-      // columns取得
-      if (this.docs.data.length) {
-        this.columns = ['_id']
-        for (const key of Object.keys(this.docs.data[0])) {
-          if (!this.columns.includes(key)) {
-            this.columns.push(key)
-          }
-        }
-      } else {
-        this.columns = []
-      }
-      // ページネーションリスト生成
-      this.pages = [...Array(this.docs.last).keys()].slice(
-        (this.docs.page - 1) - 2 < 0? 0: (this.docs.page - 1) - 2,
-        this.docs.page + 2 > this.docs.last? this.docs.last: this.docs.page + 2
-      )
-    },
-
     /**
      * ドキュメント削除
      * @param {string} document_id
@@ -116,7 +122,11 @@ export default {
         try {
           const res = (await vue.$axios.delete(`/server/nedb/${vue.collection}/${document_id}`)).data
           if (res.result) {
-            await vue.initialize() // ページリロード
+            // ページリロード
+            const data = await initialize(vue.$axios, vue.collection, vue.$route.query.page)
+            this.docs = data.docs
+            this.columns = data.columns
+            this.pages = data.pages
             vue.$toast.success(`${vue.collection}/${document_id} を削除しました`, {duration: 3000})
           } else {
             vue.$toast.error(res.error, {duration: 3000})

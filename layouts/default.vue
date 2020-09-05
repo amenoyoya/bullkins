@@ -23,7 +23,6 @@ export default {
       cur: 0,
       tabs: [
         {name: 'Frontend'},
-        {name: 'Backend', src: '/server/red/'},
         {name: 'Database', src: '/nedb/'},
       ]
     }

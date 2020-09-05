@@ -21,7 +21,7 @@ export default {
   ** See https://nuxtjs.org/api/configuration-target
   */
   target: 'server',
-  serverMiddleware: [],
+  serverMiddleware: ['~/server/index.js'],
   server: {
     port: process.env.APP_PORT || 3000,
     // host: '0.0.0.0',
@@ -78,7 +78,7 @@ export default {
   ** Nuxt.js modules
   */
   modules: [
-    '@nuxtjs/proxy',
+    '@nuxtjs/axios',
     '@nuxtjs/toast',
   ],
   /*
@@ -113,11 +113,5 @@ export default {
       mode: 'postcss',
       enabled: process.env.NODE_ENV === 'production',
     }
-  },
-  /**
-   * @nuxtjs/proxy settings
-   */
-  proxy: {
-    '/server': {target: `http://localhost:${process.env.SERVER_PORT || 3333}`, ws: true},
   },
 }

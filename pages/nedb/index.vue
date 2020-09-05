@@ -37,12 +37,18 @@ export default {
   layout: 'plain',
   data() {
     return {
-      collections: [],
       collection: '',
     }
   },
-  async mounted() {
-    this.collections = (await this.$axios.get('/server/nedb')).data
+  /**
+   * 非同期通信: レンダリング前にデータ取得
+   */
+  asyncData({$axios}) {
+    return $axios.get('/server/nedb').then(res => {
+      return {
+        collections: res.data
+      }
+    })
   },
   methods: {
     /**

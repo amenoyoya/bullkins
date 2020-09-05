@@ -1,4 +1,4 @@
-const nedb = require('../lib/nedb.js')
+const nedb = require('../../server/lib/nedb.js')
 
 module.exports = RED => {
   RED.nodes.registerType('nedb', function(config) {
