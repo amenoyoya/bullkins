@@ -9,9 +9,9 @@
         <i :class="`${tab.icon} mr-2`" />{{ tab.name }}
       </li>
     </ul>
-    <div class="w-full py-4 border-l-2 border-r-2 border-b-2">
-      <iframe v-if="tabs[cur].src" :src="tabs[cur].src" class="w-full h-screen" />
-      <Nuxt v-else />
+    <div class="w-full py-4 border-l-2 border-r-2 border-b-2" style="height: 90vh">
+      <iframe v-if="tabs[cur].src" :src="tabs[cur].src" class="w-full h-full" />
+      <div v-else class="w-full h-full"><Nuxt /></div>
     </div>
   </div>
 </template>
@@ -24,6 +24,7 @@ export default {
       tabs: [
         {icon: 'fas fa-tablet-alt', name: 'Frontend'},
         {icon: 'fas fa-database', name: 'Database', src: '/nedb/'},
+        {icon: 'fas fa-envelope', name: 'Mail', src: '/maildev/'},
       ]
     }
   }

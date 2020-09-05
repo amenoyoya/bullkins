@@ -1,5 +1,5 @@
 <template>
-  <div class="container justify-center items-center w-full">
+  <div class="container justify-center items-center w-full h-full">
     <h1 class="text-2xl">仮会員登録テスト</h1>
     <ValidationObserver
       ref="vobs" tag="form" class="mt-8 md:w-3/4 sm:w-full px-4"
@@ -39,12 +39,19 @@ export default {
     async submit() {
       if (await this.$refs.vobs.validate()) {
         try{
+          const token = this.$util.uid(64)
           await this.$nedb.insert('temp_users', {
             email: this.email,
             password: await this.$util.bcryptHash(this.password),
-            token: this.$util.uid(64),
+            token: token,
             created: new Date(),
             updated: new Date(),
+          })
+          await this.$util.sendmail({
+            from: '"metakins" <admin@metakins.localhost>',
+            to: this.email,
+            subject: '仮会員登録が完了がしました',
+            text: `以下のURLから本会員登録を完了してください\n※リンクは24時間有効\n\n${process.env.APP_URI}/register?token=${token}`
           })
           this.$toast.success('仮会員登録が完了がしました', {duration: 3000})
         } catch(err) {

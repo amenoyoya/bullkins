@@ -168,6 +168,33 @@ const util = axios => {
     uid(token_length) {
       return randtoken.uid(token_length)
     },
+
+    /**
+     * send mail by maildev
+     * @param {*} config {from, to, subject, text, html, ...}
+     * @return {string} mailID
+     */
+    async sendmail(config) {
+      const res = (await axios.post('/server/util/mail/', {
+        transport: {
+          host: '127.0.0.1',
+          port: process.env.MAILDEV_SMTP_PORT,
+          secure: false, // true for 465, false for other ports
+          // auth: {
+          //   user: testAccount.user, // generated ethereal user
+          //   pass: testAccount.pass, // generated ethereal password
+          // },
+          tls: {
+            rejectUnauthorized: false
+          }
+        },
+        config
+      })).data
+      if (!res.result) {
+        throw new Error(res.error)
+      }
+      return res.result
+    },
   }
 }
 

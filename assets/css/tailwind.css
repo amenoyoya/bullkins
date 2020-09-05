@@ -3,7 +3,7 @@
 @import 'tailwindcss/utilities';
 
 .container {
-  @apply min-h-screen flex flex-col mx-auto mt-4;
+  @apply flex flex-col mx-auto mt-4;
 }
 
 .btn {

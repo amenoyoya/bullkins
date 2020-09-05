@@ -81,6 +81,7 @@ export default {
   modules: [
     '@nuxtjs/axios',
     '@nuxtjs/toast',
+    '@nuxtjs/proxy',
   ],
   /*
   ** Build configuration
@@ -114,5 +115,13 @@ export default {
       mode: 'postcss',
       enabled: process.env.NODE_ENV === 'production',
     }
+  },
+  /**
+   * @nuxtjs/proxy settings
+   */
+  proxy: {
+    '/maildev': {
+      target: process.env.MAILDEV_URI,
+    },
   },
 }
