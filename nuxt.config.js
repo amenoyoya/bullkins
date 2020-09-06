@@ -62,8 +62,7 @@ export default {
     {src: '~/plugins/dayjs'},
     {src: '~/plugins/axios.js'},
     {src: '~/plugins/vee-validate.js'},
-    {src: '~/plugins/dialog.js', mode: 'client'},
-    {src: '~/plugins/ace.js', mode: 'client'},
+    {src: '~/plugins/ui.js', mode: 'client'},
   ],
   /*
   ** Auto import components

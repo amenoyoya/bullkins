@@ -28,6 +28,7 @@
     "rison": "^0.1.1",
     "tailwindcss": "^1.7.6",
     "vee-validate": "^3.3.9",
+    "vue-sidebar-menu": "^4.7.1",
     "vue2-ace-editor": "^0.0.15",
     "vuejs-dialog": "^1.4.2"
   },
