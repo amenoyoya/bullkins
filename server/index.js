@@ -10,22 +10,30 @@ app.use(express.urlencoded({ extended: true })); // 配列型のフォームデ�
 // ※ Express 4.X 以降 cookie-parser は標準搭載されていないため、別途インストール
 app.use(cookieParser())
 
+// API base URI
+const basepath = '' // '/server'
+
 /**
  * NeDB REST API: /server/nedb/*
  */
-app.use('/nedb', require('./api_nedb'))
+app.use(`${basepath}/nedb`, require('./api_nedb'))
 
 /**
  * Utility REST API: /server/util/*
  */
-app.use('/util', require('./api_util'))
+app.use(`${basepath}/util`, require('./api_util'))
 
 /**
  * Nuxt system REST API: /server/nuxt/*
  */
-app.use('/nuxt', require('./api_nuxt'))
+app.use(`${basepath}/nuxt`, require('./api_nuxt'))
 
 module.exports = {
   path: '/server',
   handle: app,
 }
+
+// listen: http://localhost:3333/server/
+// const port = process.env.SERVER_PORT || 3333
+// console.log(`Backend server\nListen on: http://localhost:${port}/server/`)
+// app.listen(port)
