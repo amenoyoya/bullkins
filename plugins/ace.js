@@ -7,7 +7,7 @@ import 'brace/mode/css'
 import 'brace/mode/sass'
 import 'brace/mode/javascript'
 import 'brace/mode/json'
-import 'brace/mode/less'
+import 'brace/mode/xml'
 // themes
 import 'brace/theme/tomorrow'
 import 'brace/theme/tomorrow_night_eighties'

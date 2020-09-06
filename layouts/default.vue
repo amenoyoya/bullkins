@@ -10,8 +10,12 @@
       </li>
     </ul>
     <div class="w-full py-4 border-l-2 border-r-2 border-b-2" style="height: 90vh">
-      <iframe v-if="tabs[cur].src" :src="tabs[cur].src" class="w-full h-full" />
-      <div v-else class="w-full h-full"><Nuxt /></div>
+      <div v-if="tabs[cur].src === 'nuxt'" class="w-full h-full"><Nuxt /></div>
+      <iframe v-else-if="tabs[cur].src" :src="tabs[cur].src" class="w-full h-full" />
+      <AceEditor v-else
+        v-model="content" lang="html" theme="tomorrow" width="auto" height="100%"
+        :options="{fontSize: '1rem', useWorker: false}"
+      />
     </div>
   </div>
 </template>
@@ -22,11 +26,18 @@ export default {
     return {
       cur: 0,
       tabs: [
-        {icon: 'fas fa-tablet-alt', name: 'Frontend'},
+        {icon: 'fas fa-tablet-alt', name: 'Frontend', src: 'nuxt'},
+        {icon: 'fas fa-code', name: 'Source'},
         {icon: 'fas fa-database', name: 'Database', src: '/nedb/'},
         {icon: 'fas fa-envelope', name: 'Mail', src: '/maildev/'},
-      ]
+      ],
+      content: '',
     }
+  },
+  async mounted() {
+    const info = await this.$system.getComponent(this.$route.name)
+    this.content = info.content
+    console.log(this.content)
   }
 }
 </script>

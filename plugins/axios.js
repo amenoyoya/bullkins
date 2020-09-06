@@ -201,9 +201,32 @@ const util = axios => {
 Vue.prototype.$util = util(axios)
 
 /**
+ * Nuxt System API関連
+ */
+const system = axios => {
+  return {
+    /**
+     * get nuxt routes component info
+     * @param {string} name vue.$route.name
+     * @return {path: string, content: string}
+     */
+    async getComponent(name) {
+      const res = (await axios.get(`/server/nuxt/routes/${name}`)).data
+      if (!res.result) {
+        throw new Error(res.error)
+      }
+      return res.result
+    },
+  }
+}
+
+Vue.prototype.$system = system(axios)
+
+/**
  * asyncData で使えるように context.app へ export
  */
 export default ({app, $axios}) => {
   app.$nedb = nedb($axios)
   app.$util = util($axios)
+  app.$system = system($axios)
 }

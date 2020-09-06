@@ -16,6 +16,11 @@ app.use('/nedb', require('./api_nedb'))
  */
 app.use('/util', require('./api_util'))
 
+/**
+ * Nuxt system REST API: /server/nuxt/*
+ */
+app.use('/nuxt', require('./api_nuxt'))
+
 module.exports = {
   path: '/server',
   handle: app,
