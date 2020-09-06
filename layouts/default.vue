@@ -1,6 +1,6 @@
 <template>
   <div class="my-0 mx-auto min-h-screen flex justify-center">
-    <sidebar-menu :menu="menu" collapsed="true" />
+    <sidebar-menu :menu="menu" :collapsed="true" />
     <div class="flex-grow ml-10 h-full">
       <ul class="tabs">
         <li

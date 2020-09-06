@@ -16,12 +16,12 @@ const isFile = filename => {
 
 /**
  * NeDBコレクション作成
- * @param {string} name [a-zA-Z0-9\-_] のみ許可
+ * @param {string} name [a-zA-Z0-9\-_#$@] のみ許可
  * @param {string} mode 'delete' ならコレクション削除
  * @return {object}
  */
 module.exports = (name, mode = 'open') => {
-  if (!name.match(/[a-z0-9\-_]+/i)) {
+  if (!name.match(/[a-z0-9\-_#$@]+/i)) {
     throw new Error('NeDB collection name allowed chars: [a-z][A-Z][1-9]-_')
   }
   // コレクション削除

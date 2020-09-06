@@ -195,6 +195,47 @@ const util = axios => {
       }
       return res.result
     },
+
+    /**
+     * サーバセッションにデータ保存＆クッキーにセッションID保存
+     * @param {string} key セッションID保存先クッキーのkey
+     * @param {*} data セッションに保存するデータ
+     * @param {number} lifetime = 1440 セッション＆クッキーの保存期限（秒）
+     * @return {boolean}
+     */
+    async saveSession(key, data, lifetime = 1440) {
+      const res = (await axios.post(`/server/util/session/${key}/?lifetime=${lifetime}`, data)).data
+      if (!res.result) {
+        throw new Error(res.error)
+      }
+      return res.result
+    },
+
+    /**
+     * サーバセッションからデータ取得
+     * @param {string} key セッションIDを保持しているクッキーのkey
+     * @return {*} data
+     */
+    async loadSession(key) {
+      const res = (await axios.get(`/server/util/session/${key}/`)).data
+      if (!res.result) {
+        throw new Error(res.error)
+      }
+      return res.result
+    },
+
+    /**
+     * サーバセッションとセッションIDを保持しているクッキーを削除
+     * @param {string} key セッションIDを保持しているクッキーのkey
+     * @return {boolean}
+     */
+    async clearSession(key) {
+      const res = (await axios.delete(`/server/util/session/${key}/`)).data
+      if (!res.result) {
+        throw new Error(res.error)
+      }
+      return res.result
+    },
   }
 }
 

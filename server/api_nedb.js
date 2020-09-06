@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
 /**
  * create nedb collection
  * @post /?collection={collection}
- * @param {string} collection
+ * @param {string} query.collection
  * @return {result: boolean, error: string}
  */
 router.post('/', async (req, res) => {
@@ -50,7 +50,7 @@ router.post('/', async (req, res) => {
 /**
  * delete nedb collection
  * @delete /?collection={collection}
- * @param {string} collection
+ * @param {string} query.collection
  * @return {result: number|boolean, error: string}
  */
 router.delete('/', async (req, res) => {
@@ -73,9 +73,9 @@ router.delete('/', async (req, res) => {
 /**
  * get nedb documents
  * @get /:collection/?query={rison_format_data}|pager={rison_format_data}
- * @param {[search_key]: object, $sort: object, $limit: number, $skip: number} query: object[] を取得
+ * @param {[search_key]: object, $sort: object, $limit: number, $skip: number} query.query: object[] を取得
  *    @see https://github.com/louischatriot/nedb#finding-documents
- * @param {[search_key]: object, $sort: object, $page: number, $per: number} pager: Pager を取得
+ * @param {[search_key]: object, $sort: object, $page: number, $per: number} query.pager: Pager を取得
  * @return {error: string, result: object[] | Pager {
  *    page: number,
  *    prev: number,
@@ -139,7 +139,7 @@ router.post('/:collection/', async (req, res) => {
 /**
  * update nedb documents
  * @put /:collection/?query={rison_format_data}
- * @param {[search_key]: object} query 更新したいデータ条件
+ * @param {[search_key]: object} query.query 更新したいデータ条件
  * @param {object} payload 指定keyのみ更新したい場合は {$set: {object}}
  * @return {result: number|boolean, error: string}
  */
@@ -164,7 +164,7 @@ router.put('/:collection/', async (req, res) => {
 /**
  * delete nedb documents
  * @delete /:collection/?query={rison_format_data}
- * @param {[search_key]: object} query 削除したいデータ条件
+ * @param {[search_key]: object} query.query 削除したいデータ条件
  * @return {result: number|boolean, error: string}
  */
 router.delete('/:collection', async (req, res) => {
