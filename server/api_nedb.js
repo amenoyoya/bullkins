@@ -1,9 +1,9 @@
-const express = require('express')
-const router = express.Router()
-const globby = require('globby')
-const path = require('path')
-const nedb = require('./lib/nedb')
-const rison = require('rison')
+const express = require('express');
+const router = express.Router();
+const globby = require('globby');
+const path = require('path');
+const nedb = require('./lib/nedb');
+const rison = require('rison');
 
 /**
  * get all nedb collections
@@ -13,14 +13,14 @@ const rison = require('rison')
 router.get('/', async (req, res) => {
   try {
     const collections = []
-    for (const file of await globby('./nedb/*.db')) {
+    for (const file of await globby(`${__dirname}/nedb/*.db`)) {
       collections.push(path.basename(file, path.extname(file)))
     }
-    return res.json({result: collections}).send()
+    return res.json({result: collections})
   } catch(err) {
-    return res.json({result: false, error: err.toString()}).send()
+    return res.json({result: false, error: err.toString()})
   }
-})
+});
 
 /**
  * create nedb collection
@@ -33,19 +33,19 @@ router.post('/', async (req, res) => {
     return res.json({
       result: false,
       error: 'query parameter "collection" required',
-    }).send()
+    });
   }
   try {
     return res.json({
-      result: typeof nedb(req.query.collection) === 'object'
-    }).send()
+      result: typeof nedb(req.query.collection, 'open', `${__dirname}/nedb`) === 'object'
+    });
   } catch (err) {
     return res.json({
       result: false,
       error: err.toString(),
-    }).send()
+    });
   }
-})
+});
 
 /**
  * delete nedb collection
@@ -58,17 +58,17 @@ router.delete('/', async (req, res) => {
     return res.json({
       result: false,
       error: 'query parameter "collection" required',
-    }).send()
+    });
   }
   try {
-    return res.json(nedb(req.query.collection, 'delete')).send()
+    return res.json(nedb(req.query.collection, 'delete', `${__dirname}/nedb`));
   } catch (err) {
     return res.json({
       result: false,
       error: err.toString(),
-    }).send()
+    });
   }
-})
+});
 
 /**
  * get nedb documents
@@ -91,34 +91,34 @@ router.get('/:collection', async (req, res) => {
   if (req.query.query) {
     // 通常検索
     try {
-      const query = rison.decode(req.query.query)
+      const query = rison.decode(req.query.query);
       return res.json({
-        result: await nedb(req.params.collection).find(query)
-      }).send()
+        result: await nedb(req.params.collection, 'open', `${__dirname}/nedb`).find(query)
+      });
     } catch(err) {
-      return res.json({result: false, error: err.toString()}).send()
+      return res.json({result: false, error: err.toString()});
     }
   }
   if (req.query.pager) {
     // ページャ取得
     try {
-      const query = rison.decode(req.query.pager)
+      const query = rison.decode(req.query.pager);
       return res.json({
-        result: await nedb(req.params.collection).paginate(query, query['$page'] || 1, query['$per'] || 50)
-      }).send()
+        result: await nedb(req.params.collection, 'open', `${__dirname}/nedb`).paginate(query, query['$page'] || 1, query['$per'] || 50)
+      });
     } catch(err) {
-      return res.json({result: false, error: err.toString()}).send()
+      return res.json({result: false, error: err.toString()});
     }
   }
   // 通常検索(limit: 50件)
   try {
     return res.json({
-      result: await nedb(req.params.collection).find({$limit: 50})
-    }).send()
+      result: await nedb(req.params.collection, 'open', `${__dirname}/nedb`).find({$limit: 50})
+    });
   } catch(err) {
-    return res.json({result: false, error: err.toString()}).send()
+    return res.json({result: false, error: err.toString()});
   }
-})
+});
 
 /**
  * insert nedb documents
@@ -129,12 +129,12 @@ router.get('/:collection', async (req, res) => {
 router.post('/:collection/', async (req, res) => {
   try {
     return res.json({
-      result: await nedb(req.params.collection).insert(req.body)
-    }).send()
+      result: await nedb(req.params.collection, 'open', `${__dirname}/nedb`).insert(req.body)
+    });
   } catch(err) {
-    return res.json({result: false, error: err.toString()}).send()
+    return res.json({result: false, error: err.toString()});
   }
-})
+});
 
 /**
  * update nedb documents
@@ -144,22 +144,22 @@ router.post('/:collection/', async (req, res) => {
  * @return {result: number|boolean, error: string}
  */
 router.put('/:collection/', async (req, res) => {
-  let query = {}
+  let query = {};
   if (req.query.query) {
     try {
-      query = rison.decode(req.query.query)
+      query = rison.decode(req.query.query);
     } catch(err) {
-      return res.json({result: false, error: err.toString()}).send()
+      return res.json({result: false, error: err.toString()});
     }
   }
   try {
     return res.json({
-      result: await nedb(req.params.collection).update(query, req.body)
-    }).send()
+      result: await nedb(req.params.collection, 'open', `${__dirname}/nedb`).update(query, req.body)
+    });
   } catch(err) {
-    return res.json({result: false, error: err.toString()}).send()
+    return res.json({result: false, error: err.toString()});
   }
-})
+});
 
 /**
  * delete nedb documents
@@ -168,22 +168,22 @@ router.put('/:collection/', async (req, res) => {
  * @return {result: number|boolean, error: string}
  */
 router.delete('/:collection', async (req, res) => {
-  let query = {}
+  let query = {};
   if (req.query.query) {
     try {
-      query = rison.decode(req.query.query)
+      query = rison.decode(req.query.query);
     } catch(err) {
-      return res.json({result: false, error: err.toString()}).send()
+      return res.json({result: false, error: err.toString()});
     }
   }
   try {
     return res.json({
-      result: await nedb(req.params.collection).remove(query)
-    }).send()
+      result: await nedb(req.params.collection, 'open', `${__dirname}/nedb`).remove(query)
+    });
   } catch(err) {
-    return res.json({result: false, error: err.toString()}).send()
+    return res.json({result: false, error: err.toString()});
   }
-})
+});
 
 // export
-module.exports = router
+module.exports = router;

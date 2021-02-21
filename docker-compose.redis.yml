@@ -1,0 +1,37 @@
+version: "3.8"
+
+networks:
+  appnet:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
+
+services:
+  # redis cache service container
+  redis:
+    image: redis:6
+    logging:
+      driver: json-file
+    networks:
+      - appnet
+    volumes:
+       - redis-data:/data/
+    ports:
+      - "6379:6379"
+    environment:
+      TZ: Asia/Tokyo
+  
+  # redis admin panel service container
+  commander:
+    image: rediscommander/redis-commander:latest
+    logging:
+      driver: json-file
+    networks:
+      - appnet
+    ports:
+      - "8081:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379
+      TZ: Asia/Tokyo

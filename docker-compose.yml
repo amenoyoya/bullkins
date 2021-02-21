@@ -1,0 +1,77 @@
+# ver 3.6 >= required: enable '-w' option for 'docker-compose exec'
+version: "3.8"
+
+networks:
+  # プロジェクト内仮想ネットワーク
+  ## 同一ネットワーク内の各コンテナはサービス名で双方向通信可能
+  appnet:
+    driver: bridge
+    # ネットワークIP範囲を指定する場合
+    # ipam:
+    #   driver: default
+    #   config:
+    #     # 仮想ネットワークのネットワーク範囲を指定
+    #     ## 172.68.0.0/16 の場合、172.68.0.1 ～ 172.68.255.254 のIPアドレスを割り振れる
+    #     ## ただし 172.68.0.1 はゲートウェイに使われる
+    #     - subnet: 172.68.0.0/16
+
+volumes:
+  # volume for node service container cache 
+  cache-data:
+    driver: local
+  
+  # volume for redis service container
+  redis-data:
+    driver: local
+
+services:
+  # node service container: mcr.microsoft.com/playwright (node:14)
+  # $ docker-compose exec node $command ...
+  node:
+    build:
+      context: ./docker/node/
+      args:
+        # use current working user id
+        USER_ID: $USER_ID
+    logging:
+      driver: json-file
+    networks:
+      - appnet
+    ports:
+      - "8080:8080"
+    # enable terminal
+    tty: true
+    volumes:
+      # permanent node cache data
+      - cache-data:/home/worker/.cache/:rw
+      # .ssh directory sharing
+      - ./docker/.ssh/:/home/worker/.ssh/:ro
+      # ./ => docker:/work/
+      - ./:/work/
+    environment:
+      TZ: Asia/Tokyo
+  
+  # redis cache service container
+  redis:
+    image: redis:6
+    logging:
+      driver: json-file
+    networks:
+      - appnet
+    volumes:
+       - redis-data:/data/
+    ports:
+      - "6379:6379"
+  
+  # redis admin panel service container
+  commander:
+    image: rediscommander/redis-commander:latest
+    logging:
+      driver: json-file
+    networks:
+      - appnet
+    ports:
+      - "8081:8081"
+    environment:
+      REDIS_HOSTS: local:redis:6379
+      TZ: Asia/Tokyo
