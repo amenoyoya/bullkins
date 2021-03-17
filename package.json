@@ -3,7 +3,7 @@
   "license": "MIT",
   "dependencies": {
     "aws-sdk": "^2.865.0",
-    "axios": "^0.20.0",
+    "axios": "^0.21.1",
     "bull": "^3.20.1",
     "cookie-parser": "^1.4.5",
     "dayjs": "^1.8.35",
