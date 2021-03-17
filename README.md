@@ -5,14 +5,18 @@
 - Jenkinsのようにシェルの実行・スケジューリングを管理するマネジメントシステム
 - Jenkinsほど高機能である必要はなく、APIベースで実行できるシンプルなシステムが必要だったため実装
 - cronベースのスケジューリングシステムでは秒単位の実行ができないため、Node.js（Bull.js）をコアに採用
+- Browserless API に対応
+    - Browserless Server: https://github.com/amenoyoya/browserless
+
 ## Environment
 
 - Shell: bash
 - Node.js: `14.15.4`
     - Yarn package manager: `1.22.10`
 
-### Tailwind.css Settings in Nuxt.js
-https://regenrek.com/posts/how-to-use-tailwind-css-with-nuxt/
+***
+
+## API
 
 ### Bullkins REST API
 ```bash

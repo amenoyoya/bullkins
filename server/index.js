@@ -38,30 +38,6 @@ app.use('/api/shell', require('./api_shell'));
  */
 app.use('/api/playwright', require('./api_playwright'));
 
-/**
- * Redis Commander Admin Panel: /admin/redis/*
- */
-if (process.env.REDIS_COMMANDER_URL) {
-  const redis_commander_proxy = proxy.createProxyServer({
-    target: process.env.REDIS_COMMANDER_URL
-  });
-  app.use('/admin/redis', (req, res) => {
-    redis_commander_proxy.web(req, res);
-  });
-}
-
-/**
- * MongoDB Express Admin Panel: /admin/mongodb/*
- */
-if (process.env.MONGODB_EXPRESS_URL) {
-  const mongodb_express_proxy = proxy.createProxyServer({
-    target: process.env.MONGODB_EXPRESS_URL
-  });
-  app.use('/admin/mongodb', (req, res) => {
-    mongodb_express_proxy.web(req, res);
-  });
-}
-
 // listen: http://localhost:8000/
 const port = 8000;
 const server = http.listen(port, () => {
