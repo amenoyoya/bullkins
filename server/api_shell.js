@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const bullkins = require('./lib/bullkins');
+const bullkins = require('../lib/bullkins');
 
 // サーバ起動時に登録済みジョブQueueを全て起動
 bullkins.awakenAllQueues();

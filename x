@@ -5,7 +5,8 @@ export USER_ID="${USER_ID:-$UID}"
 
 case "$1" in
 "init")
-    mkdir ./docker/node/
+    mkdir -p ./docker/node/
+    mkdir -p ./docker/mongodb/initdb.d/
     tee ./docker/node/Dockerfile << \EOS
 FROM mcr.microsoft.com/playwright
 
@@ -17,8 +18,6 @@ RUN if [ "$USER_ID" = "" ] || [ "$USER_ID" = "0" ]; then USER_ID=1026; fi && \
     apt-get update && \
     apt-get -y install locales fonts-ipafont fonts-ipaexfont && \
     echo "ja_JP UTF-8" > /etc/locale.gen && locale-gen && \
-    : 'install playwright' && \
-    yarn global add playwright && \
     : 'install Google Chrome: /usr/bin/google-chrome' && \
     apt-get install -y wget curl git vim && \
     wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
@@ -45,6 +44,10 @@ USER worker
 
 # Startup script: install node_modules && npm run start
 CMD ["/bin/bash", "-c", "yarn && yarn start"]
+EOS
+    tee ./docker/mongodb/initdb.d/.gitignore << \EOS
+/*
+!.gitignore
 EOS
     tee docker-compose.yml << \EOS
 # ver 3.6 >= required: enable '-w' option for 'docker-compose exec'
@@ -132,9 +135,6 @@ EOS
     else
         docker-compose exec node ${@:2:($#-1)}
     fi
-    ;;
-"redis")
-    docker-compose -f docker-compose.redis.yml ${@:2:($#-1)}
     ;;
 *)
     docker-compose $*

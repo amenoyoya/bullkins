@@ -16,10 +16,6 @@ networks:
     #     - subnet: 172.68.0.0/16
 
 volumes:
-  # volume for node service container cache 
-  cache-data:
-    driver: local
-  
   # volume for redis service container
   redis-data:
     driver: local
@@ -38,20 +34,18 @@ services:
     networks:
       - appnet
     ports:
-      - "8080:8080"
+      # http://localhost:${SERVER_PORT} => http://node:8000
+      - "${SERVER_PORT:-8000}:8000"
     # enable terminal
     tty: true
     volumes:
-      # permanent node cache data
-      - cache-data:/home/worker/.cache/:rw
-      # .ssh directory sharing
-      - ./docker/.ssh/:/home/worker/.ssh/:ro
       # ./ => docker:/work/
       - ./:/work/
     environment:
       TZ: Asia/Tokyo
   
   # redis cache service container
+  ## tcp://redis:6379
   redis:
     image: redis:6
     logging:
@@ -60,18 +54,49 @@ services:
       - appnet
     volumes:
        - redis-data:/data/
-    ports:
-      - "6379:6379"
   
   # redis admin panel service container
+  ## http://commander:8081
   commander:
     image: rediscommander/redis-commander:latest
     logging:
       driver: json-file
     networks:
       - appnet
-    ports:
-      - "8081:8081"
     environment:
       REDIS_HOSTS: local:redis:6379
+      TZ: Asia/Tokyo
+
+  # mongodb service container: mongo db v4.4
+  ## mongodb://root:root@mongodb:27017
+  mongodb:
+    image: mongo:4.4
+    logging:
+      driver: json-file
+    networks:
+      - appnet
+    volumes:
+      # database data persistence
+      - mongodb-data:/data/db/
+      # initial data sharing
+      - ./docker/mongodb/initdb.d/:/docker-entrypoint-initdb.d/
+    working_dir: /docker-entrypoint-initdb.d/
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      TZ: Asia/Tokyo
+
+  # express service container: mongo-express:latest
+  ## http://express:8081
+  express:
+    image: mongo-express:latest
+    logging:
+      driver: json-file
+    networks:
+      - appnet
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+      ME_CONFIG_MONGODB_SERVER: mongodb # service://mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
       TZ: Asia/Tokyo

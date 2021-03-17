@@ -8,8 +8,6 @@ RUN if [ "$USER_ID" = "" ] || [ "$USER_ID" = "0" ]; then USER_ID=1026; fi && \
     apt-get update && \
     apt-get -y install locales fonts-ipafont fonts-ipaexfont && \
     echo "ja_JP UTF-8" > /etc/locale.gen && locale-gen && \
-    : 'install playwright' && \
-    yarn global add playwright && \
     : 'install Google Chrome: /usr/bin/google-chrome' && \
     apt-get install -y wget curl git vim && \
     wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
