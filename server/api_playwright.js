@@ -22,12 +22,12 @@ async function handleBrowserlessError(modules, data, err) {
   }
   try {
     if (typeof data.retry === 'object' && typeof(data.retry.max) === 'number') {
-      // 試行回数が retry.max 以下なら retry.timeout ミリ秒後（default: 10秒後）に再試行
+      // 試行回数が retry.max 以下なら retry.delay ミリ秒後（default: 10秒後）に再試行
       if (modules.$retry <= data.retry.max) {
         modules.$retry++;
         setTimeout(async () => {
           await processBrowserless(modules, data);
-        }, data.retry.timeout || 10 * 1000);
+        }, data.retry.delay || 10 * 1000);
       }
     }
   } catch (err) {
@@ -39,7 +39,7 @@ async function handleBrowserlessError(modules, data, err) {
  * オブジェクトを Browserless Server に送信して処理させる
  * @param {object} modules {}
  * @param {object} data {
- *    retry: {max: number, timeout: number} => エラー時の再試行設定
+ *    retry: {max: number, delay: number} => エラー時の再試行設定
  *    modules: [] => requireして使えるようにしたいmodules (init, done, catch の第1引数 object に登録される)
  *    init: function(modules) return {object} => 最初に実行される関数。戻り値として返したobjectは、play時のシナリオとして利用可能となる
  *    done: function(modules, data) => 最後に実行される関数(playwright実行結果を第2引数に取る)
@@ -87,7 +87,7 @@ async function processBrowserless(modules, data) {
 /**
  * POST /playwright/: Browserless Server に yaml を送信して処理させる
  * @param {string} yaml yaml-string {
- *    retry: {max: number, timeout: number} => エラー時の再試行設定
+ *    retry: {max: number, delay: number} => エラー時の再試行設定
  *    modules: [] => requireして使えるようにしたいmodules (init, done, catch の第1引数 object に登録される)
  *    init: !!js/function "function(modules) {...}" => 最初に実行される関数。戻り値として返したobjectは、play時のシナリオとして利用可能となる
  *    done: !!js/function "function(modules, data) {...}" => 最後に実行される関数(playwright実行結果を第2引数に取る)
