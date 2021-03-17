@@ -47,6 +47,8 @@ services:
       - ./:/work/
     environment:
       TZ: Asia/Tokyo
+      # playwright インストール時にブラウザダウンロードをスキップ
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
   
   # redis cache service container
   ## tcp://redis:6379
