@@ -279,3 +279,16 @@ catch: !!js/function |-
     await mod.mongodb_client.close();
   }
 ```
+
+### 外部 Browserless サーバを利用する場合
+デフォルトでは、Browserはローカルから起動するが、それではメモリ不足になる可能性がある場合、外部に Browserless サーバを立てて利用することができる
+
+自分で立てる場合は https://github.com/amenoyoya/browserless が利用可能
+
+クラウドサービスを利用する場合は https://www.browserless.io/ が利用可能
+
+#### server/.env
+```bash
+# 環境変数 BROWSERLESS_ENDPOINT を指定することで外部サービスを利用できるようになる
+BROWSERLESS_ENDPOINT='wss://chrome.browserless.io?token=YOUR-API-TOKEN'
+```
