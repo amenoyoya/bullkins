@@ -61,188 +61,266 @@ $ ./x up -d
 
 ##  Bullkins REST API
 
-⚡ シェルスクリプトを非同期的に実行・スケジューリングするためのAPI
+⚡ Yaml形式のテキストを送信することで、Yaml内で定義した Node.js 関数を非同期的に実行・スケジューリングするためのAPI
 
-- 新規ジョブ登録: `POST /api/shell/jobs/{QueueName}`
+### 新規ジョブ登録
+- POST `/api/bullkins/jobs`
     - POST data (Content-Type: application/json):
-        - **command**: `string`
-            - ジョブとして登録するシェルスクリプトを指定
-        - **option**: `object`
-            - **priority**: `number`
-                - 実行優先順位（1が最優先）
-            - **delay**: `number`
-                - ジョブの開始を指定ミリ秒遅延
-            - **attempts**: `number`
-                - ジョブ失敗時にリトライする試行回数（これを指定しない限りリトライされない）
-            - **backoff**: `object`
-                - **type**: `string` (`fixed`|`exponential`)
-                    - ジョブ失敗時のリトライ方法
-                    - `fixed`の場合は、`delay`ミリ秒固定で遅延してからリトライ
-                    - `exponential`の場合は、失敗を繰り返すごとに徐々にリトライ間隔を伸ばす
-                - **delay**: `number`
-                    - ジョブ失敗のリトライの際に待機するミリ秒数
-            - **lifo**: `boolean`
-                - trueを指定した場合は、ジョブをキュー最後尾ではなく先頭に登録する
-            - **timeout**: `number`
-                - 指定ミリ秒経過した際にタイムアウトエラーとする
-            - **jobId**: `number`|`string`
-                - ジョブIDをデフォルトのものから変える際に指定
-            - **removeOnComplete**: `boolean`
-                - trueを指定した場合は、ジョブ完了時にジョブを削除する
-            - **removeOnFail**: `boolean`
-                - trueを指定した場合は、ジョブ失敗時（リトライも全て失敗した後）にジョブを削除する
-            - **stackTraceLimit**: `number`
-                - StackTraceの保持行数を設定
-            - **repeat**: `object`
-                - **cron**: `string`
-                    - cron式（`分 時 日 月 週`）で反復実行
-                - **every**: `number`
-                    - 指定ミリ秒ごとに反復実行
-                - **tz**: `string`
-                    - 反復実行のTimeZoneを設定
-                - **startDate**: `Date`|`string`|`number`
-                    - 反復実行の開始日時を指定
-                - **endDate**: `Date`|`string`|`number`
-                    - 反復実行の終了日時を設定
-                - **limit**: `number`
-                    - 最大反復回数を設定
-                - **count**: `number`
-                    - 反復回数のカウンタ開始値を設定
+        - **yaml**: `string`
+            - ジョブとして登録する各種関数等をYaml形式のテキストにまとめて送信する
     - Response: `object`
         - **id**: `string`
             - ジョブID
         - その他、ジョブに関する情報
-- 登録済みの全てのQueue名を取得: `GET /api/shell/queues`
+
+#### Yaml format
+```yaml
+# ジョブを登録するQueueの名前: string
+## 指定しない場合は '__BullkinsQueue__' が指定される
+name: TestRepeatBullkinsQueue
+
+# ジョブ登録時のオプション: object
+# - priority: number 実行優先順位（1が最優先）
+# - delay: number ジョブの開始を指定ミリ秒遅延
+# - attempts: number ジョブ失敗時にリトライする試行回数（これを指定しない限りリトライされない）
+# - backoff: object
+#     - type: string (`fixed`|`exponential`)
+#         + ジョブ失敗時のリトライ方法
+#         + `fixed`の場合は、`delay`ミリ秒固定で遅延してからリトライ
+#         + `exponential`の場合は、失敗を繰り返すごとに徐々にリトライ間隔を伸ばす
+#     - delay: number ジョブ失敗のリトライの際に待機するミリ秒数
+# - lifo: boolean trueを指定した場合は、ジョブをキュー最後尾ではなく先頭に登録する
+# - timeout: number 指定ミリ秒経過した際にタイムアウトエラーとする
+# - jobId: number|string ジョブIDをデフォルトのものから変える際に指定
+# - removeOnComplete: boolean trueを指定した場合は、ジョブ完了時にジョブを削除する
+# - removeOnFail: boolean trueを指定した場合は、ジョブ失敗時（リトライも全て失敗した後）にジョブを削除する
+# - stackTraceLimit: number StackTraceの保持行数を設定
+# - repeat: object
+#     - cron: string cron式（`分 時 日 月 週`）で反復実行
+#     - every: number 指定ミリ秒ごとに反復実行
+#     - tz: string 反復実行のTimeZoneを設定
+#     - startDate: Date|string|number 反復実行の開始日時を指定
+#     - endDate: Date|string|number 反復実行の終了日時を設定
+#     - limit: number 最大反復回数を設定
+#     - count: number 反復回数のカウンタ開始値を設定
+## 例) 5回まで毎分実行し、失敗時は最大10回まで10秒ごとに再試行する
+option:
+  repeat:
+    cron: "*/1 * * * *"
+    limit: 5
+  attempts: 10
+  backoff:
+    type: fixed
+    delay: 10000
+
+# 使用モジュール: string[]|object[]
+#   配列の要素が string の場合、指定のモジュールが require され job.$module[指定文字列] にセットされる
+#   配列の要素が object の場合、object.module のモジュールが require され job.$module[object.name] にセットされる
+#   ※ 上記の job 変数は main, error 関数の第1引数から参照可能
+#   ※ 使用可能なモジュールはサーバサイドにインストールされているものに限る
+## 以下の場合
+## - job.$module.NeDB = require('./lib/nedb.js')
+## - job.$module.dayjs = require('dayjs')
+modules:
+  - name: NeDB
+    module: ~/lib/nedb.js
+  - dayjs
+
+# メイン関数: (job: object) => null
+# - 第1引数: Job情報 object
+#     - $done: (returnvalue: any) => null ジョブを完了させる関数
+#         - main関数の最後で必ず呼び出すこと（呼び出さない限りジョブが完了しない）
+#     - $throw: (error: Error) => null ジョブを failed 状態で完了させる関数
+#         - 内部で yaml.error 関数も呼び出される
+#     - $module: object $yaml.modules で指定したモジュールが登録されているテーブル
+#     - $yaml: object Yamlテキストを load した object
+#     - $redis: ioredis.Redis Redis Client
+#     - $mongodb: object @ref lib/mongodb.js#connectMongoDB
+#     - data.yaml: string Source Yaml Text
+#     - ...bull.Job
+main: !!js/function |-
+  async function(job) {
+    // 現在日時を NeDB.logs に insert
+    const result = await job.$module.NeDB('logs', 'open', './test/nedb').insert({
+      date: job.$module.dayjs().format('YYYY-MM-DD HH:mm:ss')
+    });
+    // insert結果を returnValue としてジョブ完了
+    job.$done(result);
+  }
+
+# エラー処理: (job: object, error: Error) => null
+# - 第1引数: main関数の第1引数（ジョブ情報）と同一
+# - 第2引数: エラーオブジェクト
+error: !!js/function |-
+  async function(job, err) {
+    // エラー内容を MongoDB に保存
+    if (job.$mongodb) {
+      await job.$mongodb.db('test').collection('errors').insert({
+        error: err.stack,
+        date: job.$module.dayjs().format('YYYY-MM-DD HH:mm:ss'),
+      });
+    }
+  }
+```
+
+#### POST
+```javascript
+const axios = require('axios');
+const fs = require('fs');
+
+axios.post('http://localhost:8000/api/bullkins/jobs', {yaml: fs.readFileSync('your-target-yaml.yml', 'utf-8')})
+  .then(res => console.log(res.data))
+  .catch(err => console.error(err.response.data));
+```
+
+### 登録済みの全てのQueue名を取得
+- GET `/api/bullkins/queues`
     - Response: `string[]`
         - 登録済みQueue名一覧
-- 指定Queueに登録されている全てのジョブIDを取得: `GET /api/shell/jobs/{QueueName}`
+
+```bash
+# 登録済みの全てのQueue名を取得
+$ curl http://localhost:8000/api/bullkins/queues
+
+# => ["__BullkinsQueue__", "TestRepeatBullkinsQueue"]
+```
+
+### 指定Queueに登録されている全てのジョブIDを取得
+- GET `/api/bullkins/jobs/{QueueName}`
     - Response: `object`
         - **jobs**: `string[]`
-            - 通常ジョブIDの一覧
-        - **repeat_jobs**: `string[]`
-            - 反復ジョブIDの一覧
-- ジョブ情報取得: `GET /api/shell/jobs/{QueueName}/{JobID}`
+            - ジョブIDの一覧
+        - **repeat_jobs**: `object{key: string, name: string, id: string, ...}[]`
+            - 反復ジョブ情報の一覧
+
+```bash
+# Queue:TestRepeatBullkinsQueue に登録されている全てのジョブIDを取得
+$ curl http://localhost:8000/api/bullkins/jobs/TestRepeatBullkinsQueue
+
+# => {
+#   "jobs": ["repeat:xxx:xxxx", ...],
+#   "repeat_jobs": [{"key": "__default__::10000", ...}, ...]
+# }
+```
+
+### ジョブ情報取得
+- GET `/api/bullkins/jobs/{QueueName}/{JobID}`
     - Response: `object`
         - **id**: `string`
             - ジョブID
         - その他、ジョブに関する情報
-- ジョブ削除: `DELETE /api/shell/jobs/{QueueName}/{JobID}`
-- 反復ジョブとして登録したジョブを停止（削除）: `DELETE /api/shell/jobs/{QueueName}`
-    - POST Data (Content-Type: application/json):
-        - ジョブ登録時に `option.repeat` に指定したデータを送信する
 
 ```bash
-# ----
-# Queue名: TestShell のQueueに新規ジョブ登録
-## payload.command: $HOME/app/nodejs/test/test-command.sh 実行
-$ curl -X POST -H 'Content-Type:application/json' -d '{
-  "command": "/bin/bash $HOME/app/nodejs/test/test-command.sh"
-}' http://localhost:8000/api/shell/jobs/TestShell
+# Queue:TestRepeatBullkinsQueue に登録されている JobID: repeat:8c67330a4d444f9e84a1bb899165c85a:1616157960000 のジョブ情報を取得
+$ curl http://localhost:8000/api/bullkins/jobs/TestRepeatBullkinsQueue/repeat:8c67330a4d444f9e84a1bb899165c85a:1616157960000
 
-# => {"id": "1", "name": "__default__", ...}
+# => {
+#   "id": "repeat:8c67330a4d444f9e84a1bb899165c85a:1616157960000",
+#   "status": "completed",
+#   ...
+# }
+```
 
-# ----
-# Queue名: GetDateShell のQueueに新規ジョブ登録
-## payload.command: date関数の実行結果をecho
-## payload.repeat: 10秒ごとに繰り返し実行
-$ curl -X POST -H 'Content-Type:application/json' -d '{
-  "command": "echo $(date)",
-  "option": {
-    "repeat": {"every": 10000}
-  }
-}' http://localhost:8000/api/shell/jobs/GetDateShell
+### ジョブ削除
+- DELETE `/api/bullkins/jobs/{QueueName}/{JobID}`
+    - Response: `object`
+        - **name**: `string`
+            - Job Queue Name
+        - **id**: `string`
+            - Job ID
 
-# => {"id": "repeat:xxx:xxx", "name": "__default__", ...}
+```bash
+# Queue:TestShellQueue に登録されている ID: 1 のジョブを削除
+$ curl -X DELETE http://localhost:8000/api/bullkins/jobs/TestShellQueue/1
 
-# ----
-# 登録済みの全てのQueue名を取得
-$ curl http://localhost:8000/api/shell/queues
-
-# => ["TestShell", "GetDateShell"]
-
-# ----
-# Queue名: TestShell のQueueに登録されている ID: 1 のジョブ情報を取得
-$ curl http://localhost:8000/api/shell/jobs/TestShell/1
-
-# => {"id": 1, "status": "active", "stdout": "...", ...}
-
-# ----
-# Queue名: TestShell のQueueに登録されている ID: 1 のジョブを削除
-$ curl -X DELETE http://localhost:8000/api/shell/jobs/TestShell/1
-
-# ----
-# Queue名: GetDateShell のQueueに登録されている全てのジョブIDを取得
-$ curl http://localhost:8000/api/shell/jobs/GetDateShell
-
-# => [
-#   "jobs": ["repeat:xxx:xxxx", ...],
-#   "repeat_jobs": [{"key": "__default__::10000", ...}, ...]
-# ]
-
-# ----
 # Repeatable Job として登録したジョブを停止（削除）
-## payload: repeat条件のJSONデータを指定
-$ curl -X DELETE -H 'Content-Type:application/json' -d '{"every": 10000}' http://localhost:8000/api/shell/jobs/GetDateShell
+## Repeatable Job ID: `repeat:{repeat_key}:{job_id}`
+## Repeatable Job の job_id は複数登録されているはずだが、リピートを停止する場合はどれを指定しても良い
+$ curl -X DELETE http://localhost:8000/api/bullkins/jobs/TestRepeatBullkinsQueue/repeat:8c67330a4d444f9e84a1bb899165c85a:1616157960000
+```
+
+***
+
+## Bullkins Shell API
+
+⚡ Bullkins REST API の内、特にシェルスクリプトの非同期実行・スケジューリングを行うための API
+
+- POST `/api/bullkins/shell.jobs`
+    - POST data (Content-Type: application/json):
+        - **yaml**: `string`
+            - ジョブとして登録する各種コマンド等をYaml形式のテキストにまとめて送信する
+    - Response: `object`
+        - **id**: `string`
+            - ジョブID
+        - その他、ジョブに関する情報
+
+### Yaml format
+```yaml
+# ジョブを登録するQueueの名前: string
+## 指定しない場合は '__BullkinsShellQueue__' が指定される
+name: TestShellQueue
+
+# ジョブ登録時オプション: object
+# POST /api/bullkins/jobs 時の $yaml.option と同一
+option:
+  priority: 1
+
+# シェルスクリプト実行時オプション: object
+# @ref https://nodejs.org/api/child_process.html child_process.spawn#options
+## shell_option.shell: true (default) だと command にシェルスクリプトをそのまま書けるようになる
+## shell_option.shell: false では command にコマンドを記述し args にコマンド引数を配列で渡す必要がある
+shell_option:
+  shell: false
+
+# シェル実行コマンド: string
+command: ls
+
+# command に渡す引数: string[]
+args:
+  - "-la"
 ```
 
 ***
 
 ## Playwright REST API
 
-⚡ ヘッドレスブラウザを用いてスクレイピングを行うためのAPI
+⚡ Bullkins REST API の内、特にヘッドレスブラウザを用いてスクレイピングを行うための API
 
-- スクレイピングシナリオの登録: `POST /api/playwright`
-    - POST Data (Content-Type: application/json):
+- POST `/api/bullkins/playwright.jobs`
+    - POST data (Content-Type: application/json):
         - **yaml**: `string`
-            - スクレイピングシナリオをYaml形式のテキストで送信する
+            - スクレイピングシナリオ等をYaml形式のテキストにまとめて送信する
+    - Response: `object`
+        - **id**: `string`
+            - ジョブID
+        - その他、ジョブに関する情報
 
-### Yaml Data
+### Yaml format
 ```yaml
-# エラー時のリトライ設定: $yaml.retry
-#   {max: number => 最大試行回数, delay: number => リトライまでの待機時間（ミリ秒, default: 10秒）}
-## 以下の場合、1秒後再試行（最大3回）
-retry:
-  max: 3
-  delay: 10000
+# ジョブを登録するQueueの名前: string
+## 指定しない場合は '__BullkinsPlaywrightQueue__' が指定される
+name: TestScrapingQueue
 
-# 使用モジュール: $yaml.modules string[]|object[]
-#   配列の要素が string の場合、指定のモジュールが require され、modules[指定文字列] にセットされる
-#   配列の要素が object の場合、object.module のモジュールが require され、modules[object.name] にセットされる
-#   上記の modules 変数は、init, done, catch 関数の第1引数から参照可能
-# - 使用可能なモジュールはサーバサイドにインストールされているものに限る
-## 以下の場合
-## - modules.mbd = require('mongodb')
-## - modules.dayjs = require('dayjs')
+# ジョブ登録時オプション: object
+# POST /api/bullkins/jobs 時の $yaml.option と同一
+## 以下の場合、失敗時は5分毎に5回まで再試行する（失敗が繰り返される度に徐々に待機時間を長くする）
+option:
+  attempts: 5
+  backoff:
+    type: exponential
+    delay: 300000
+
+# 使用モジュール: string[]|object[]
+# POST /api/bullkins/jobs 時の $yaml.modules と同一
 modules:
-  - name: mdb
-    module: mongodb
   - dayjs
 
-# 最初に実行される関数: $yaml.init (modules: object) => object
-#   第1引数に $yaml.modules で指定した modules オブジェクトが渡される
-#     その他参照可能な変数
-#     - modules.$yaml_text: string このYamlテキスト
-#     - modules.$yaml: object このYamlテキストをパージしてJSONオブジェクト化したもの
-#     - modules.$retry: number エラー発生回数（試行回数）
-#     - modules.$process: ($yaml: object) => null このYamlオブジェクトを再度処理するため関数
-#   戻り値に指定したオブジェクトは Playwright 用のカスタムアクションとして登録される
-#     カスタムアクション関数: (browser: playwright.Page, scenario: any) => any
+# 最初に実行される関数: (job: object) => object
+# - 第1引数: ジョブ情報（POST /api/bullkins/jobs 時の $yaml.main 関数の第1引数と同一）
+# - 戻り値に指定したオブジェクトは Playwright 用のカスタムアクションとして登録される
+#     - カスタムアクション関数: (browser: playwright.Page, scenario: any) => any
 init: !!js/function |-
-  async function(mod) {
-    /**
-     * MongoDB Client
-     */
-    mod.mongodb_client = new mod.mbd.MongoClient('mongodb://root:root@mongodb:27017', { useUnifiedTopology: true });
-    await mod.mongodb_client.connect();
-
-    const db = mod.mongodb_client.db('test');
-    mod.mongodb_find = async (collection, query) => await db.collection(collection, query).toArray();
-    mod.mongodb_insert = async (collection, data) => Array.isArray(data)?
-      await db.collection(collection).insertMany(data): await db.collection(collection).insertOne(data);
-    mod.mongodb_update = async (collection, query, data) => Array.isArray(data)?
-      await db.collection(collection).updateMany(query, data): await db.collection(collection).updateOne(query, data);
-    mod.mongodb_delete = async (collection, query) => await db.collection(collection).deleteMany(query);
-
+  async function(job) {
     /**
      * Playwright Custom Actions
      */
@@ -250,7 +328,10 @@ init: !!js/function |-
       // Google Search Action: (browser: playwright.Page, url: string) => {titles: string[], next: string|boolesn}
       google: async (browser, url) => {
         // MongoDB にログ保存
-        await mod.mongodb_insert('logs', {url, date: mod.dayjs().format('YYYY-MM-DD hh:mm:ss')});
+        await job.$mongodb.db('test').collection('logs').insert({
+          url,
+          date: job.$module.dayjs().format('YYYY-MM-DD HH:mm:ss')
+        });
 
         const goto = await browser.actions.goto(browser, {url, waitUntil: 'networkidle'});
         if (!goto.result) return {titles: [], next: false};
@@ -268,17 +349,17 @@ init: !!js/function |-
     };
   }
 
-# Playwright 実行シナリオ: $yaml.play object|object[]
+# Playwright 実行シナリオ: object|object[]
 # デフォルトのアクション: @ref ./lib/playwright.js
 # - goto: string|object 指定URLにアクセス
 # - wait: string|number 指定セレクタが出現するまで or 一定時間待機
 # - scrape: object|object[] 指定条件でスクレイピング
-#   {selector: string XPath|CSSセレクタ, attributes: string[] 取得するHTML属性, actions: object[] 要素に対して行うアクション}
-#       action {action: string 'click'|'fill'|..., args: any[] アクションに渡す引数}
+#     - {selector: string XPath|CSSセレクタ, attributes: string[] 取得するHTML属性, actions: object[] 要素に対して行うアクション}
+#         - action {action: string 'click'|'fill'|..., args: any[] アクションに渡す引数}
 # - screenshot: object アクセス中のページのスクリーンショットを撮る
-#   {path: ファイル保存先, s3: {AWS S3 アップロード設定}, fullPage: boolean, ...}
+#     - {path: ファイル保存先, s3: {AWS S3 アップロード設定}, fullPage: boolean, ...}
 # - download: option 指定アクション実行後に発生するダウンロードイベントをキャッチしファイルに保存する
-#   {path: ファイル保存先, actions: [{action: string, args: any[]}]}
+#     - {path: ファイル保存先, actions: [{action: string, args: any[]}]}
 # - callback: function(playwright.Page) => any 任意関数実行
 play:
   # カスタムアクション 'google' を実行
@@ -288,38 +369,37 @@ play:
 # 独自定義変数: カウンタ
 count: 0
 
-# Playwright 実行後関数: $yaml.done (modules: object, result: any)
-# 第1引数の modules については、init関数と同一
-# 第2引数には Playwright 実行後の結果（play の戻り値）が渡る
-done: !!js/function |-
-  async function(mod, result) {
+# Playwright 実行後関数: (job: object, result: object|object[]) => null
+# - 第1引数: ジョブ情報（POST /api/bullkins/jobs 時の $yaml.main 関数の第1引数と同一）
+# - 第2引数: Playwright実行結果 object|object[]
+then: !!js/function |-
+  async function(job, result) {
     // result.google にカスタムアクションの実行結果が入っている
     // MongoDBにtitles保存
-    await mod.mongodb_insert('titles', result.google.titles.map(title => {return {title};}));
-
-    // close MongoDB Client
-    await mod.mongodb_client.close();
+    await job.$mongodb.db('test').collection('titles').insert(
+      result.google.titles.map(title => {return {title};}
+    ));
 
     // 次のページURLがある場合再帰処理（ただし5回まで）
-    if (result.google.next && ++mod.$yaml.count < 5) {
-      console.log(mod.$yaml.count);
-      // mod.$yaml = this yaml object
-      // mod.$yaml.play.google <= set next url
-      mod.$yaml.play.google = result.google.next;
-      await mod.$process(mod.$yaml);
+    if (result.google.next && ++job.$yaml.count < 5) {
+      // job.$yaml = this yaml object
+      // job.$yaml.play.google <= set next url
+      job.$yaml.play.google = result.google.next;
+
+      // 再帰処理したい場合は $yaml.main 関数を呼び出す
+      await job.$yaml.main(job);
     }
   }
 
-# エラー処理: $yaml.catch (modules: object, error: object)
-# 第1引数の modules については、init関数と同一
-# 第2引数にはエラーオブジェクトが渡る
-catch: !!js/function |-
-  async function(mod, err) {
+# エラー処理: (job: object, error: Error) => null
+# POST /api/bullkins/jobs 時の $yaml.error と同一
+error: !!js/function |-
+  async function(job, err) {
     // エラー内容を MongoDB に保存
-    await mod.mongodb_insert('error_logs', {error: err.stack, date: mod.dayjs().format('YYYY-MM-DD hh:mm:ss')});
-
-    // close MongoDB Client
-    await mod.mongodb_client.close();
+    await job.$mongodb.db('test').collection('error_logs').insert({
+      error: err.stack,
+      date: mod.dayjs().format('YYYY-MM-DD HH:mm:ss')
+    });
   }
 ```
 

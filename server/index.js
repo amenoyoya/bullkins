@@ -2,7 +2,6 @@ const express = require('express');
 const app = express();
 
 const http = require('http').Server(app);
-const proxy = require('http-proxy');
 
 const cookieParser = require('cookie-parser');
 
@@ -29,14 +28,9 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookieParser());
 
 /**
- * Shell Command Job Queueing API: /api/shell/*
+ * Job Queueing (Bullkins) API: /api/bullkins/*
  */
-app.use('/api/shell', require('./api_shell'));
-
-/**
- * Playwright (Browserless Scraping) API: /api/playwright/*
- */
-app.use('/api/playwright', require('./api_playwright'));
+ app.use('/api/bullkins', require('./api_bullkins'));
 
 // listen: http://localhost:8000/
 const port = 8000;

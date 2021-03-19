@@ -1,0 +1,86 @@
+# ジョブを登録するQueueの名前: string
+## 指定しない場合は '__BullkinsQueue__' が指定される
+name: TestRepeatBullkinsQueue
+
+# ジョブ登録時のオプション: object
+# - priority: number 実行優先順位（1が最優先）
+# - delay: number ジョブの開始を指定ミリ秒遅延
+# - attempts: number ジョブ失敗時にリトライする試行回数（これを指定しない限りリトライされない）
+# - backoff: object
+#     - type: string (`fixed`|`exponential`)
+#         + ジョブ失敗時のリトライ方法
+#         + `fixed`の場合は、`delay`ミリ秒固定で遅延してからリトライ
+#         + `exponential`の場合は、失敗を繰り返すごとに徐々にリトライ間隔を伸ばす
+#     - delay: number ジョブ失敗のリトライの際に待機するミリ秒数
+# - lifo: boolean trueを指定した場合は、ジョブをキュー最後尾ではなく先頭に登録する
+# - timeout: number 指定ミリ秒経過した際にタイムアウトエラーとする
+# - jobId: number|string ジョブIDをデフォルトのものから変える際に指定
+# - removeOnComplete: boolean trueを指定した場合は、ジョブ完了時にジョブを削除する
+# - removeOnFail: boolean trueを指定した場合は、ジョブ失敗時（リトライも全て失敗した後）にジョブを削除する
+# - stackTraceLimit: number StackTraceの保持行数を設定
+# - repeat: object
+#     - cron: string cron式（`分 時 日 月 週`）で反復実行
+#     - every: number 指定ミリ秒ごとに反復実行
+#     - tz: string 反復実行のTimeZoneを設定
+#     - startDate: Date|string|number 反復実行の開始日時を指定
+#     - endDate: Date|string|number 反復実行の終了日時を設定
+#     - limit: number 最大反復回数を設定
+#     - count: number 反復回数のカウンタ開始値を設定
+## 例) 5回まで毎分実行し、失敗時は最大10回まで10秒ごとに再試行する
+option:
+  repeat:
+    cron: "*/1 * * * *"
+    limit: 5
+  attempts: 10
+  backoff:
+    type: fixed
+    delay: 10000
+
+# 使用モジュール: string[]|object[]
+#   配列の要素が string の場合、指定のモジュールが require され job.$module[指定文字列] にセットされる
+#   配列の要素が object の場合、object.module のモジュールが require され job.$module[object.name] にセットされる
+#   ※ 上記の job 変数は main, error 関数の第1引数から参照可能
+#   ※ 使用可能なモジュールはサーバサイドにインストールされているものに限る
+## 以下の場合
+## - job.$module.NeDB = require('./lib/nedb.js')
+## - job.$module.dayjs = require('dayjs')
+modules:
+  - name: NeDB
+    module: ~/lib/nedb.js
+  - dayjs
+
+# メイン関数: (job: object) => null
+# - 第1引数: Job情報 object
+#     - $done: (returnvalue: any) => null ジョブを完了させる関数
+#         - main関数の最後で必ず呼び出すこと（呼び出さない限りジョブが完了しない）
+#     - $throw: (error: Error) => null ジョブを failed 状態で完了させる関数
+#         - 内部で yaml.error 関数も呼び出される
+#     - $module: object $yaml.modules で指定したモジュールが登録されているテーブル
+#     - $yaml: object Yamlテキストを load した object
+#     - $redis: ioredis.Redis Redis Client
+#     - $mongodb: object @ref lib/mongodb.js#connectMongoDB
+#     - data.yaml: string Source Yaml Text
+#     - ...bull.Job
+main: !!js/function |-
+  async function(job) {
+    // 現在日時を NeDB.logs に insert
+    const result = await job.$module.NeDB('logs', 'open', './test/nedb').insert({
+      date: job.$module.dayjs().format('YYYY-MM-DD HH:mm:ss')
+    });
+    // insert結果を returnValue としてジョブ完了
+    job.$done(result);
+  }
+
+# エラー処理: (job: object, error: Error) => null
+# - 第1引数: main関数の第1引数（ジョブ情報）と同一
+# - 第2引数: エラーオブジェクト
+error: !!js/function |-
+  async function(job, err) {
+    // エラー内容を MongoDB に保存
+    if (job.$mongodb) {
+      await job.$mongodb.db('test').collection('errors').insert({
+        error: err.stack,
+        date: job.$module.dayjs().format('YYYY-MM-DD HH:mm:ss'),
+      });
+    }
+  }
