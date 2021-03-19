@@ -14,7 +14,8 @@
     "js-yaml-js-types": "^1.0.0",
     "mongodb": "^3.6.5",
     "nedb-promises": "^4.1.1",
-    "playwright": "^1.9.2"
+    "playwright": "^1.9.2",
+    "sprintf": "^0.1.5"
   },
   "scripts": {
     "start": "node server/index.js"
