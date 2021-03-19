@@ -14,6 +14,49 @@
 - Node.js: `14.15.4`
     - Yarn package manager: `1.22.10`
 
+### Docker containers
+- networks:
+    - **appnet**: `local`
+        - All docker containers in this project will be belonged to this network
+- volumes:
+    - **redis-data**: `local`
+        - Volume for redis service container
+    - **mongodb-data**: `local`
+        - Volume for mongodb service container
+- services:
+    - **node**: `mcr.microsoft.com/playwright` (Node.js 14.x)
+        - Node.js service container
+        - routes:
+            - HTTP: http://localhost:{SERVER_PORT:-8000} => http://node:8000
+    - **redis**: `redis:6`
+        - Redis in-memory KVS database service container
+        - routes:
+            - TCP: tcp://redis:6379
+    - **commander**: `rediscommander/redis-commander:latest`
+        - Redis admin panel service container
+        - routes:
+            - HTTP: http://localhost:{REDIS_COMMANDER_PORT:-6380} => http://commander:8081
+    - **mongodb**: `mongo:4.4`
+        - MongoDB service container
+        - routes:
+            - TCP: `mongodb://root:root@mongodb:27017`
+    - **express**: `mongo-express:latest`
+        - MongoDB admin panel service container
+        - routes:
+            - http://localhost:{MONGODB_EXPRESS_PORT:-27080} => http://express:8081
+
+### Setup
+```bash
+# Add execution permission to the CLI tool
+$ chmod +x ./x
+
+# Build the docker containers
+$ ./x build
+
+# Launch the docker containers
+$ ./x up -d
+```
+
 ***
 
 ##  Bullkins REST API
@@ -287,7 +330,7 @@ catch: !!js/function |-
 
 クラウドサービスを利用する場合は https://www.browserless.io/ が利用可能
 
-#### server/.env
+#### ./.env
 ```bash
 # 環境変数 BROWSERLESS_ENDPOINT を指定することで外部サービスを利用できるようになる
 BROWSERLESS_ENDPOINT='wss://chrome.browserless.io?token=YOUR-API-TOKEN'

@@ -9,7 +9,7 @@ const cookieParser = require('cookie-parser');
 /**
  * process.env form .env
  */
-require('dotenv').config({path: `${__dirname}/.env`});
+require('dotenv').config({path: `${__dirname}/../.env`});
 
 // ※ Express 4.16 以降、Body-Parser機能は標準搭載されている
 // ※ 4.16 未満のバージョンを使っている場合は、別途 body-parser パッケージのインストールが必要

@@ -68,12 +68,12 @@ networks:
     #     - subnet: 172.68.0.0/16
 
 volumes:
-  # volume for node service container cache 
-  cache-data:
-    driver: local
-  
   # volume for redis service container
   redis-data:
+    driver: local
+  
+  # volume for mongodb service container
+  mongodb-data:
     driver: local
 
 services:
@@ -90,20 +90,20 @@ services:
     networks:
       - appnet
     ports:
-      - "8080:8080"
+      # http://localhost:${SERVER_PORT} => http://node:8000
+      - "${SERVER_PORT:-8000}:8000"
     # enable terminal
     tty: true
     volumes:
-      # permanent node cache data
-      - cache-data:/home/worker/.cache/:rw
-      # .ssh directory sharing
-      - ./docker/.ssh/:/home/worker/.ssh/:ro
       # ./ => docker:/work/
       - ./:/work/
     environment:
       TZ: Asia/Tokyo
+      # playwright インストール時にブラウザダウンロードをスキップ
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
   
   # redis cache service container
+  ## tcp://redis:6379
   redis:
     image: redis:6
     logging:
@@ -112,10 +112,9 @@ services:
       - appnet
     volumes:
        - redis-data:/data/
-    ports:
-      - "6379:6379"
   
   # redis admin panel service container
+  ## http://commander:8081
   commander:
     image: rediscommander/redis-commander:latest
     logging:
@@ -123,10 +122,58 @@ services:
     networks:
       - appnet
     ports:
-      - "8081:8081"
+      # http://localhost:${REDIS_COMMANDER_PORT} => http://commander:8081
+      - "${REDIS_COMMANDER_PORT:-6380}:8081"
     environment:
       REDIS_HOSTS: local:redis:6379
       TZ: Asia/Tokyo
+
+  # mongodb service container: mongo db v4.4
+  ## mongodb://root:root@mongodb:27017
+  mongodb:
+    image: mongo:4.4
+    logging:
+      driver: json-file
+    networks:
+      - appnet
+    volumes:
+      # database data persistence
+      - mongodb-data:/data/db/
+      # initial data sharing
+      - ./docker/mongodb/initdb.d/:/docker-entrypoint-initdb.d/
+    working_dir: /docker-entrypoint-initdb.d/
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      TZ: Asia/Tokyo
+
+  # express service container: mongo-express:latest
+  ## http://express:8081
+  express:
+    image: mongo-express:latest
+    logging:
+      driver: json-file
+    networks:
+      - appnet
+    ports:
+      # http://localhost:${MONGODB_EXPRESS_PORT} => http://express:8081
+      - "${MONGODB_EXPRESS_PORT:-27080}:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+      ME_CONFIG_MONGODB_SERVER: mongodb # service://mongodb
+      ME_CONFIG_MONGODB_PORT: 27017
+      TZ: Asia/Tokyo
+EOS
+    tee ./.env << \EOS
+# docker ports
+SERVER_PORT=8000
+REDIS_COMMANDER_PORT=6380
+MONGODB_EXPRESS_PORT=27080
+
+# api server config
+REDIS_HOST=redis
+REDIS_PORT=6379
 EOS
     ;;
 "node")
