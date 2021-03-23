@@ -45,6 +45,9 @@ services:
     volumes:
       # ./ => docker:/work/
       - ./:/work/
+      # Docker socket 共有
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/bin/docker
     environment:
       TZ: Asia/Tokyo
       # playwright インストール時にブラウザダウンロードをスキップ
