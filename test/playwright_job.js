@@ -107,6 +107,6 @@ error: !!js/function |-
   }
 `;
 
-axios.post('http://localhost:8000/api/bullkins/playwright.jobs', {yaml})
+axios.post('http://localhost:8000/api/bullkins/playwright.jobs', yaml, {headers: {'Content-Type': 'text/plain'}})
   .then(res => console.log(res.data))
   .catch(err => console.error(err));

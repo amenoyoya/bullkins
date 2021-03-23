@@ -16,6 +16,6 @@ error: !!js/function |-
   }
 `;
 
-axios.post('http://localhost:8000/api/bullkins/jobs', {yaml})
+axios.post('http://localhost:8000/api/bullkins/jobs', yaml, {headers: {'Content-Type': 'text/plain'}})
   .then(res => console.log(res.data))
   .catch(err => console.log(err.response.data));

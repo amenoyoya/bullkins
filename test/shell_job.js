@@ -24,6 +24,6 @@ args:
   - "-la"
 `;
 
-axios.post('http://localhost:8000/api/bullkins/shell.jobs', {yaml})
+axios.post('http://localhost:8000/api/bullkins/shell.jobs', yaml, {headers: {'Content-Type': 'text/plain'}})
   .then(res => console.log(res.data))
   .catch(err => console.error(err));

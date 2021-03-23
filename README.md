@@ -65,9 +65,8 @@ $ ./x up -d
 
 ### 新規ジョブ登録
 - POST `/api/bullkins/jobs`
-    - POST data (Content-Type: application/json):
-        - **yaml**: `string`
-            - ジョブとして登録する各種関数等をYaml形式のテキストにまとめて送信する
+    - POST data (Content-Type: text/plain): `string`
+        - ジョブとして登録する各種関数等をYaml形式のテキストにまとめて送信する
     - Response: `object`
         - **id**: `string`
             - ジョブID
@@ -168,7 +167,11 @@ error: !!js/function |-
 const axios = require('axios');
 const fs = require('fs');
 
-axios.post('http://localhost:8000/api/bullkins/jobs', {yaml: fs.readFileSync('your-target-yaml.yml', 'utf-8')})
+axios.post('http://localhost:8000/api/bullkins/jobs', fs.readFileSync('your-target-yaml.yml', 'utf-8'), {
+  headers: {
+    'Content-Type': 'text/plain',
+  }
+})
   .then(res => console.log(res.data))
   .catch(err => console.error(err.response.data));
 ```
@@ -246,9 +249,8 @@ $ curl -X DELETE http://localhost:8000/api/bullkins/jobs/TestRepeatBullkinsQueue
 ⚡ Bullkins REST API の内、特にシェルスクリプトの非同期実行・スケジューリングを行うための API
 
 - POST `/api/bullkins/shell.jobs`
-    - POST data (Content-Type: application/json):
-        - **yaml**: `string`
-            - ジョブとして登録する各種コマンド等をYaml形式のテキストにまとめて送信する
+    - POST data (Content-Type: text/plain): `string`
+        - ジョブとして登録する各種コマンド等をYaml形式のテキストにまとめて送信する
     - Response: `object`
         - **id**: `string`
             - ジョブID
@@ -287,9 +289,8 @@ args:
 ⚡ Bullkins REST API の内、特にヘッドレスブラウザを用いてスクレイピングを行うための API
 
 - POST `/api/bullkins/playwright.jobs`
-    - POST data (Content-Type: application/json):
-        - **yaml**: `string`
-            - スクレイピングシナリオ等をYaml形式のテキストにまとめて送信する
+    - POST data (Content-Type: text/plain): `string`
+        - スクレイピングシナリオ等をYaml形式のテキストにまとめて送信する
     - Response: `object`
         - **id**: `string`
             - ジョブID
