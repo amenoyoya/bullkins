@@ -127,7 +127,7 @@ modules:
 
 # メイン関数: (job: object) => null
 # - 第1引数: Job情報 object
-#     - $done: (returnvalue: any) => null ジョブを完了させる関数
+#     - $done: (returnvalue: any, error: Error = null) => null ジョブを完了させる関数
 #         - main関数の最後で必ず呼び出すこと（呼び出さない限りジョブが完了しない）
 #     - $throw: (error: Error) => null ジョブを failed 状態で完了させる関数
 #         - 内部で yaml.error 関数も呼び出される
@@ -135,6 +135,11 @@ modules:
 #     - $yaml: object Yamlテキストを load した object
 #     - $redis: ioredis.Redis Redis Client
 #     - $mongodb: object @ref lib/mongodb.js#connectMongoDB
+#     - $register: (yaml: object, type: string = 'jobs') => Promise Bull Queue Job 登録関数
+#          - Bullkins WebAPI を呼び出して指定の Yaml object をジョブとして登録する
+#              - ※ option.attempts, option.backoff による再試行が上手く行かない場合用
+#          - WebAPI を経由せず、プログラム的に再帰処理したい場合は job.$yaml.main(job) を呼び出す
+#          - type: 'jobs' | 'shell.jobs' | 'playwright.jobs'
 #     - data.yaml: string Source Yaml Text
 #     - ...bull.Job
 main: !!js/function |-
