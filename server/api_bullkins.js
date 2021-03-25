@@ -12,7 +12,7 @@ module.exports = async (fastify, opts) => {
     try {
       reply.send(await bullkins.getQueueNames());
     } catch (err) {
-      reply.code(500).send({error: err.stack});
+      reply.code(500).send({error: process.env.DEBUG === 'true'? err.stack: err.toString()});
     }
   });
 
@@ -25,7 +25,7 @@ module.exports = async (fastify, opts) => {
     try {
       reply.send(await bullkins.launchJob(request.body));
     } catch (err) {
-      reply.code(500).send({error: err.stack});
+      reply.code(500).send({error: process.env.DEBUG === 'true'? err.stack: err.toString()});
     }
   });
 
@@ -38,7 +38,7 @@ module.exports = async (fastify, opts) => {
     try {
       reply.send(await bullkins.launchShellJob(request.body));
     } catch (err) {
-      reply.code(500).send({error: err.stack});
+      reply.code(500).send({error: process.env.DEBUG === 'true'? err.stack: err.toString()});
     }
   });
 
@@ -51,7 +51,7 @@ module.exports = async (fastify, opts) => {
     try {
       reply.send(await bullkins.launchPlaywrightJob(request.body));
     } catch (err) {
-      reply.code(500).send({error: err.stack});
+      reply.code(500).send({error: process.env.DEBUG === 'true'? err.stack: err.toString()});
     }
   });
 
@@ -64,7 +64,7 @@ module.exports = async (fastify, opts) => {
     try {
       reply.send(await bullkins.getQueueJobs(request.params.name));
     } catch (err) {
-      reply.code(500).send({error: err.stack});
+      reply.code(500).send({error: process.env.DEBUG === 'true'? err.stack: err.toString()});
     }
   });
 
@@ -83,7 +83,7 @@ module.exports = async (fastify, opts) => {
         reply.code(404).send({error: `${req.params.name}[${req.params.id}] not found`});
       }
     } catch (err) {
-      reply.code(500).send({error: err.stack});
+      reply.code(500).send({error: process.env.DEBUG === 'true'? err.stack: err.toString()});
     }
   });
 
@@ -106,7 +106,7 @@ module.exports = async (fastify, opts) => {
         reply.code(404).send({error: `${req.params.name}[${req.params.id}] not found`});
       }
     } catch (err) {
-      reply.code(500).send({error: err.stack});
+      reply.code(500).send({error: process.env.DEBUG === 'true'? err.stack: err.toString()});
     }
   });
 };
