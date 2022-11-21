@@ -7,7 +7,7 @@
     "bull": "^3.20.1",
     "dayjs": "^1.8.35",
     "dotenv": "^8.2.0",
-    "fastify": "^3.14.0",
+    "fastify": "^3.29.4",
     "ioredis": "^4.22.0",
     "js-yaml": "^4.0.0",
     "js-yaml-js-types": "^1.0.0",
